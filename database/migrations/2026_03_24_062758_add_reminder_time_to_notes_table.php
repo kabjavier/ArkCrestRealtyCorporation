@@ -7,15 +7,11 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('notes', function (Blueprint $table) {
-            $table->time('reminder_time')->nullable()->after('note_date');
-        });
+        // Columns already added in previous migration
     }
 
     public function down(): void
     {
-        Schema::table('notes', function (Blueprint $table) {
-            $table->dropColumn('reminder_time');
-        });
+        // Nothing to reverse
     }
 };
