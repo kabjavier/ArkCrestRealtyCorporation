@@ -8,15 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('commission_requests_sales', function (Blueprint $table) {
-            $table->decimal('commission_percent', 8, 4)->nullable()->after('net_tcp');
-        });
+        // Column already included in the create migration
     }
 
     public function down(): void
     {
-        Schema::table('commission_requests_sales', function (Blueprint $table) {
-            $table->dropColumn('commission_percent');
-        });
+        // Nothing to reverse
     }
 };
