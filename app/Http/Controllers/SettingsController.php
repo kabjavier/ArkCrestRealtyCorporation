@@ -86,6 +86,9 @@ class SettingsController extends Controller
         $user->update(['status' => 'active', 'role' => $role]);
         \App\Models\SystemNotification::where('type', 'user_pending')->where('is_read', false)->where('message', 'like', '%'.$user->name.'%')->update(['is_read' => true]);
         ActivityLog::log('approve', 'Settings', "Approved user ID: {$id} with role '{$role}'");
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\AccountStatusNotification($user->name, 'approved'));
+        } catch (\Exception $e) {}
         return redirect()->route('settings')->with('success', 'User approved successfully.')->with('open_section', 'users');
     }
 
@@ -94,6 +97,9 @@ class SettingsController extends Controller
         if (!auth()->user()->isAdmin()) abort(403);
         $user = User::findOrFail($id);
         ActivityLog::log('reject', 'Settings', "Rejected and removed user '{$user->name}' ({$user->email})");
+        try {
+            \Mail::to($user->email)->send(new \App\Mail\AccountStatusNotification($user->name, 'rejected'));
+        } catch (\Exception $e) {}
         $user->delete();
         return redirect()->route('settings')->with('success', 'User rejected and removed.')->with('open_section', 'users');
     }
