@@ -252,7 +252,7 @@ class SettingsController extends Controller
             'role'        => 'staff',
             'status'      => 'pre_registered',
         ]);
-        return redirect()->route('settings')->with('emp_success', "Employee '{$request->name}' added successfully.")->with('open_section', 'employee-directory');
+        return redirect()->route('settings')->with('emp_success', "Employee '{$request->name}' added successfully.")->with('open_section', $request->has('redirect_to_visibility') ? 'visibility' : 'employee-directory');
     }
 
     public function updateSecurityQuestion(Request $request)

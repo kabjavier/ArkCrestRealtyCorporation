@@ -1041,7 +1041,16 @@
 
     <div class="st-panel" id="panel-visibility">
 
-      <div class="st-page-header"><div class="st-page-title">Page Visibility</div><div class="st-page-sub">Checked items are visible to the selected user. Uncheck to hide. Admin always sees everything.</div></div>
+      <div class="st-page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="st-page-title">Page Visibility</div>
+          <div class="st-page-sub">Checked items are visible to the selected user. Uncheck to hide. Admin always sees everything.</div>
+        </div>
+        <button type="button" onclick="document.getElementById('addUserVisModal').style.display='flex'" class="st-btn st-btn-primary" style="display:flex;align-items:center;gap:6px;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add User
+        </button>
+      </div>
 
       <div class="st-card"><div class="st-card-body">
 
@@ -1086,13 +1095,15 @@
           $staffUsers = $activeUsers->where('role', '!=', 'admin')->where('status', 'active');
           $selectedUserId = request('vis_user') ?? ($staffUsers->first()->id ?? null);
           $selectedUser = $staffUsers->firstWhere('id', $selectedUserId);
-          // visible_pages = all pages NOT in hidden_pages
           $userHidden = $selectedUser ? ($selectedUser->hidden_pages ?? []) : [];
         @endphp
 
         {{-- User selector --}}
         <div style="margin-bottom:20px;">
-          <label style="font-weight:600;font-size:13px;color:#1e4575;display:block;margin-bottom:8px;">Select User</label>
+          <label style="font-weight:700;font-size:13px;color:#1e4575;display:block;margin-bottom:8px;">Page Visibility — Select User</label>
+          @if($staffUsers->isEmpty())
+            <div style="color:#6b7280;font-size:13px;">No active users yet. Add a user first.</div>
+          @else
           <div style="display:flex;flex-wrap:wrap;gap:8px;" id="vis-user-tabs">
             @foreach($staffUsers as $u)
               <button type="button" onclick="selectVisUser({{ $u->id }}, this)"
@@ -1101,8 +1112,10 @@
               </button>
             @endforeach
           </div>
+          @endif
         </div>
 
+        @if($selectedUser)
         <form method="POST" action="{{ route('settings.visibility') }}" id="vis-form">@csrf
           <input type="hidden" name="visibility_submitted" value="1">
           <input type="hidden" name="visibility_user_id" id="vis_user_id" value="{{ $selectedUserId }}">
@@ -1125,12 +1138,48 @@
 
           <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
             <button type="submit" class="st-btn st-btn-primary">Save Visibility</button>
-            @if($selectedUser)<span style="font-size:13px;color:#6b7280;">for {{ $selectedUser->name }}</span>@endif
+            <span style="font-size:13px;color:#6b7280;">for {{ $selectedUser->name }}</span>
           </div>
         </form>
+        @endif
 
       </div></div>
 
+    </div>
+
+    {{-- ADD USER MODAL --}}
+    <div id="addUserVisModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:12px;padding:28px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+          <h3 style="font-size:16px;font-weight:700;color:#1e4575;margin:0;">Add New User</h3>
+          <button type="button" onclick="document.getElementById('addUserVisModal').style.display='none'" style="background:none;border:none;font-size:20px;cursor:pointer;color:#6b7280;">&times;</button>
+        </div>
+        <form method="POST" action="{{ route('settings.employee.add') }}">@csrf
+          <input type="hidden" name="redirect_to_visibility" value="1">
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Full Name <span style="color:#ef4444;">*</span></label>
+              <input class="st-input" type="text" name="name" required placeholder="Full name" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Position <span style="color:#ef4444;">*</span></label>
+              <input class="st-input" type="text" name="position" required placeholder="Job title / position" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Employee ID <span style="color:#ef4444;">*</span></label>
+              <input class="st-input" type="text" name="employee_id" required placeholder="e.g. 0050" style="width:100%;">
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:#374151;display:block;margin-bottom:4px;">Date Hired <span style="color:#ef4444;">*</span></label>
+              <input class="st-input" type="date" name="date_hired" required style="width:100%;">
+            </div>
+          </div>
+          <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" onclick="document.getElementById('addUserVisModal').style.display='none'" class="st-btn" style="background:#f3f4f6;color:#374151;">Cancel</button>
+            <button type="submit" class="st-btn st-btn-primary">Add User</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     {{-- ACTIVITY LOG PANEL --}}
