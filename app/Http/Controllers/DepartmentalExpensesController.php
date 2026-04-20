@@ -148,28 +148,26 @@ class DepartmentalExpensesController extends Controller
             }
         }
 
-        // Generate control number based on date_requested or current date
+        // Generate unique control number using DB lock
         $date = $validated['date_requested'] ? Carbon::parse($validated['date_requested']) : Carbon::now();
         $month = $date->format('m');
-        $year = $date->format('y');
+        $year  = $date->format('y');
+        $key   = 'ctrl_num_' . $date->format('Y_m');
 
-        // Get the highest control number for this month/year
-        $lastRequest = CommissionRequest::where('control_number', 'like', "ARCS-{$month}-%-{$year}")
-            ->orderBy('id', 'desc')
-            ->first();
+        $controlNumber = \DB::transaction(function() use ($month, $year, $key) {
+            $current = (int)(\DB::table('app_settings')->where('key', $key)->value('value') ?? 0);
+            $count = $current + 1;
+            // Make sure it's truly unique
+            while (CommissionRequest::where('control_number', sprintf('ARCS-%s-%03d-%s', $month, $count, $year))->exists()) {
+                $count++;
+            }
+            \DB::table('app_settings')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $count, 'created_at' => now(), 'updated_at' => now()]
+            );
+            return sprintf('ARCS-%s-%03d-%s', $month, $count, $year);
+        });
 
-        $count = 1;
-        if ($lastRequest && preg_match('/ARCS-\d{2}-(\d{3})-\d{2}/', $lastRequest->control_number, $matches)) {
-            $count = intval($matches[1]) + 1;
-        }
-
-        // Ensure uniqueness by incrementing until we find an unused number
-        do {
-            $controlNumber = sprintf('ARCS-%s-%03d-%s', $month, $count, $year);
-            $exists = CommissionRequest::where('control_number', $controlNumber)->exists();
-            if ($exists) $count++;
-        } while ($exists);
-        
         $validated['control_number'] = $controlNumber;
         
         // Convert empty strings to null for date fields
@@ -198,22 +196,8 @@ class DepartmentalExpensesController extends Controller
 
         try {
             $commissionRequest = CommissionRequest::create($validated);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-            // Retry with a fresh unique control number
-            $count++;
-            do {
-                $controlNumber = sprintf('ARCS-%s-%03d-%s', $month, $count, $year);
-                $exists = CommissionRequest::where('control_number', $controlNumber)->exists();
-                if ($exists) $count++;
-            } while ($exists);
-            $validated['control_number'] = $controlNumber;
-            try {
-                $commissionRequest = CommissionRequest::create($validated);
-            } catch (\Exception $e2) {
-                return response()->json(['success' => false, 'message' => 'Duplicate control number. Please try again.'], 422);
-            }
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to save. Please try again.'], 500);
         }
 
         ActivityLog::log('create', 'Departmental Expenses', "Added expense '{$validated['category']}' for {$validated['department']} by {$validated['requestor_name']} (₱" . number_format($validated['requested_amount'] ?? 0, 2) . ")");
