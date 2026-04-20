@@ -1285,8 +1285,13 @@ function removeBudgetCategory(btn, catName) {
     btn.closest('div').remove();
 }
 
-document.getElementById('budget_new_cat').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') { e.preventDefault(); addBudgetCategory(); }
+document.addEventListener('DOMContentLoaded', function() {
+    const budgetCatInput = document.getElementById('budget_new_cat');
+    if (budgetCatInput) {
+        budgetCatInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addBudgetCategory(); }
+        });
+    }
 });
 
 function closeBudgetModal() {
