@@ -1084,7 +1084,7 @@ document.getElementById('addRequestForm').addEventListener('submit', function(e)
     
     const formData = {
         requestor_name: document.getElementById('requestor_name').value.trim(),
-        department: reverseDepartmentName(document.getElementById('department').value.trim()),
+        department: document.getElementById('department').value.trim(),
         category: document.getElementById('category').value.trim(),
         date_requested: document.getElementById('date_requested').value || null,
         requested_amount: parseFloat(document.getElementById('requested_amount').value.replace(/,/g,'')) || 0,
