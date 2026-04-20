@@ -55,6 +55,14 @@ class DepartmentController extends Controller
     }
     
     // API Methods
+    public function deleteDepartment($id)
+    {
+        if (!auth()->user()->isAdmin()) abort(403);
+        $dept = Department::findOrFail($id);
+        $dept->delete();
+        return response()->json(['success' => true]);
+    }
+
     public function addDepartment(Request $request)
     {
         if (!auth()->user()->isAdmin()) abort(403);

@@ -74,6 +74,7 @@ Route::middleware('auth')->group(function () {
 
     // API Routes for Department Operations
     Route::post('/api/departments/add', [DepartmentController::class, 'addDepartment']);
+    Route::delete('/api/departments/{id}/delete', [DepartmentController::class, 'deleteDepartment']);
     Route::post('/api/departments/{id}/budget', [DepartmentController::class, 'updateBudget']);
     Route::post('/api/departments/{id}/categories', [DepartmentController::class, 'addCategory']);
     Route::post('/api/departments/{id}/add-category-with-amount', [DepartmentController::class, 'addCategoryWithAmount']);

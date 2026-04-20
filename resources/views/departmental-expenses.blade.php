@@ -49,6 +49,17 @@
             else { alert(d.message || 'Error adding department'); }
         });
     });
+
+    function deleteDepartment(id, name) {
+        if (!confirm('Delete "' + name + '" department? This cannot be undone.')) return;
+        fetch('/api/departments/' + id + '/delete', {
+            method: 'DELETE',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+        }).then(r => r.json()).then(d => {
+            if (d.success) { location.reload(); }
+            else { alert(d.message || 'Error deleting department'); }
+        });
+    }
     </script>
 
     <!-- Department Budget Overview -->
@@ -101,10 +112,16 @@
                         </div>
                         <div style="font-size:10px;color:#9ca3af;text-align:right;margin-top:2px;">{{ number_format($pct, 1) }}% used</div>
                         @if(auth()->user()->isAdmin())
-                        <button onclick="event.stopPropagation();openBudgetModal({{ $dept->id }}, '{{ $dept->name }}', {{ $dept->allowable_budget }}, '{{ $dept->budget_from?->format('Y-m-d') ?? '' }}', '{{ $dept->budget_to?->format('Y-m-d') ?? '' }}')" class="btn-update-budget" style="width:100%;margin-top:10px;justify-content:center;">
-                            <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            Edit Budget
-                        </button>
+                        <div style="display:flex;gap:8px;margin-top:10px;">
+                            <button onclick="event.stopPropagation();openBudgetModal({{ $dept->id }}, '{{ $dept->name }}', {{ $dept->allowable_budget }}, '{{ $dept->budget_from?->format('Y-m-d') ?? '' }}', '{{ $dept->budget_to?->format('Y-m-d') ?? '' }}')" class="btn-update-budget" style="flex:1;justify-content:center;">
+                                <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Edit
+                            </button>
+                            <button onclick="event.stopPropagation();deleteDepartment({{ $dept->id }}, '{{ $dept->name }}')" style="padding:6px 10px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;">
+                                <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Delete
+                            </button>
+                        </div>
                         @endif
                     </div>
                 </div>
