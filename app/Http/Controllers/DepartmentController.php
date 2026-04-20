@@ -93,6 +93,22 @@ class DepartmentController extends Controller
         $department->budget_from = $request->budget_from ?: null;
         $department->budget_to = $request->budget_to ?: null;
         $department->save();
+
+        // Sync categories if provided
+        if ($request->has('categories') && is_array($request->categories)) {
+            // Add new ones
+            foreach ($request->categories as $cat) {
+                if (trim($cat)) {
+                    ExpenseCategory::firstOrCreate(
+                        ['department_id' => $id, 'name' => trim($cat)]
+                    );
+                }
+            }
+            // Remove ones not in the list
+            ExpenseCategory::where('department_id', $id)
+                ->whereNotIn('name', array_filter(array_map('trim', $request->categories)))
+                ->delete();
+        }
         
         return response()->json([
             'success' => true,

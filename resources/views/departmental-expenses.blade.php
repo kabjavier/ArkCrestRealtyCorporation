@@ -362,9 +362,9 @@
     @endif
 </div>
 <div id="budgetModal" class="modal">
-    <div class="modal-content modal-compact" style="max-width: 450px;">
+    <div class="modal-content modal-compact" style="max-width: 480px;max-height:85vh;overflow-y:auto;">
         <div class="modal-header">
-            <h3>Update Budget</h3>
+            <h3>Edit Department</h3>
             <span class="close" onclick="closeBudgetModal()">&times;</span>
         </div>
         <form id="budgetUpdateForm" class="modal-form">
@@ -395,8 +395,17 @@
                     <input type="date" id="budget_to" class="form-control form-control-sm">
                 </div>
             </div>
+            {{-- Categories section --}}
+            <div class="form-group" style="margin-top:8px;">
+                <label style="font-weight:600;font-size:12px;">Categories</label>
+                <div id="budget_categories_list" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;min-height:32px;"></div>
+                <div style="display:flex;gap:8px;">
+                    <input type="text" id="budget_new_cat" placeholder="Add category..." class="form-control form-control-sm" style="flex:1;">
+                    <button type="button" onclick="addBudgetCategory()" style="padding:5px 12px;background:#1e4575;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Add</button>
+                </div>
+            </div>
             <div class="form-actions-right" style="margin-top: 20px;">
-                <button type="submit" class="btn-submit">Update Budget</button>
+                <button type="submit" class="btn-submit">Save Changes</button>
             </div>
         </form>
     </div>
@@ -1236,7 +1245,6 @@ function openBudgetModal(deptId, deptName, currentBudget, budgetFrom, budgetTo) 
     document.getElementById('budget_from').value = budgetFrom || '';
     document.getElementById('budget_to').value = budgetTo || '';
 
-    // Calculate total expenses for this dept from the card display
     const remaining = document.getElementById('remaining_display_' + deptId);
     const budget = document.getElementById('budget_display_' + deptId);
     const budgetVal = parseFloat((budget ? budget.textContent : '0').replace(/[₱,]/g, '')) || 0;
@@ -1246,8 +1254,40 @@ function openBudgetModal(deptId, deptName, currentBudget, budgetFrom, budgetTo) 
     document.getElementById('budget_total_expenses').value = '₱ ' + totalExp.toLocaleString('en-US', {minimumFractionDigits: 2});
     document.getElementById('budget_remaining').value = '₱ ' + remainingVal.toLocaleString('en-US', {minimumFractionDigits: 2});
 
+    // Load existing categories
+    const catList = document.getElementById('budget_categories_list');
+    catList.innerHTML = '';
+    const deptCats = categories[deptName] || [];
+    deptCats.forEach(cat => {
+        const tag = document.createElement('div');
+        tag.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f0f4ff;border-radius:6px;font-size:12px;';
+        tag.innerHTML = '<span>' + cat + '</span><button type="button" onclick="removeBudgetCategory(this, \'' + cat + '\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;">&times;</button>';
+        catList.appendChild(tag);
+    });
+
     document.getElementById('budgetModal').style.display = 'block';
 }
+
+function addBudgetCategory() {
+    const input = document.getElementById('budget_new_cat');
+    const val = input.value.trim();
+    if (!val) return;
+    const catList = document.getElementById('budget_categories_list');
+    const tag = document.createElement('div');
+    tag.style.cssText = 'display:flex;align-items:center;gap:6px;padding:4px 10px;background:#f0f4ff;border-radius:6px;font-size:12px;';
+    tag.innerHTML = '<span>' + val + '</span><button type="button" onclick="removeBudgetCategory(this, \'' + val + '\')" style="background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px;">&times;</button>';
+    catList.appendChild(tag);
+    input.value = '';
+}
+
+function removeBudgetCategory(btn, catName) {
+    if (!confirm('Remove "' + catName + '" category?')) return;
+    btn.closest('div').remove();
+}
+
+document.getElementById('budget_new_cat').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); addBudgetCategory(); }
+});
 
 function closeBudgetModal() {
     document.getElementById('budgetModal').style.display = 'none';
@@ -1279,6 +1319,7 @@ document.getElementById('budgetUpdateForm').addEventListener('submit', function(
             allowable_budget: newBudget,
             budget_from: document.getElementById('budget_from').value || null,
             budget_to: document.getElementById('budget_to').value || null,
+            categories: Array.from(document.querySelectorAll('#budget_categories_list div span')).map(s => s.textContent),
         })
     })
     .then(response => response.json())
