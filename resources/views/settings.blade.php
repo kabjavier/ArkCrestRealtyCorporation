@@ -1107,11 +1107,15 @@
           @else
           <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;" id="vis-user-tabs">
             @foreach($staffUsers as $u)
-              <button type="button" onclick="selectVisUser({{ $u->id }}, this)"
-                style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;border-radius:12px;cursor:pointer;border:2px solid {{ $selectedUserId == $u->id ? '#1e4575' : '#e5e7eb' }};background:{{ $selectedUserId == $u->id ? '#1e4575' : '#fff' }};color:{{ $selectedUserId == $u->id ? '#fff' : '#374151' }};min-width:100px;box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:all .2s;">
-                <div style="width:40px;height:40px;border-radius:50%;background:{{ $selectedUserId == $u->id ? 'rgba(255,255,255,0.25)' : '#e8edf5' }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:{{ $selectedUserId == $u->id ? '#fff' : '#1e4575' }};">
-                  {{ strtoupper(substr($u->name,0,1)) }}
-                </div>
+              <button type="button" onclick="selectVisUser({{ $u->id }}, this, '{{ addslashes($u->name) }}')"
+                style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;border-radius:12px;cursor:pointer;border:2px solid {{ $selectedUserId == $u->id ? '#1e4575' : '#e5e7eb' }};background:{{ $selectedUserId == $u->id ? '#1e4575' : '#fff' }};color:{{ $selectedUserId == $u->id ? '#fff' : '#374151' }};min-width:100px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                @if($u->avatar)
+                  <img src="{{ asset('storage/'.$u->avatar) }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid {{ $selectedUserId == $u->id ? 'rgba(255,255,255,0.4)' : '#e5e7eb' }};">
+                @else
+                  <div style="width:40px;height:40px;border-radius:50%;background:{{ $selectedUserId == $u->id ? 'rgba(255,255,255,0.25)' : '#e8edf5' }};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:{{ $selectedUserId == $u->id ? '#fff' : '#1e4575' }};">
+                    {{ strtoupper(substr($u->name,0,1)) }}
+                  </div>
+                @endif
                 <div style="font-size:12px;font-weight:600;text-align:center;line-height:1.3;">{{ $u->name }}</div>
                 <div style="font-size:10px;opacity:0.75;text-align:center;">{{ ucfirst($u->status) }}</div>
               </button>
@@ -1142,8 +1146,9 @@
 
           <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
             <button type="submit" class="st-btn st-btn-primary" {{ !$selectedUser ? 'disabled' : '' }}>Save Visibility</button>
-            @if($selectedUser)<span style="font-size:13px;color:#6b7280;">for {{ $selectedUser->name }}</span>
-            @else<span style="font-size:13px;color:#6b7280;">Select a user above to save</span>@endif
+            <span style="font-size:13px;color:#6b7280;" id="vis-for-label">
+              {{ $selectedUser ? 'for '.$selectedUser->name : 'Select a user above to save' }}
+            </span>
           </div>
         </form>
 
@@ -1834,20 +1839,25 @@ function showPanel(name) {
     if (btn)   btn.classList.add('active');
 }
 
-function selectVisUser(userId, btn) {
+function selectVisUser(userId, btn, userName) {
     document.getElementById('vis_user_id').value = userId;
     document.querySelectorAll('#vis-user-tabs button').forEach(b => {
         b.style.background = '#fff';
         b.style.color = '#374151';
         b.style.borderColor = '#e5e7eb';
-        b.querySelector('div:first-child').style.background = '#e8edf5';
-        b.querySelector('div:first-child').style.color = '#1e4575';
+        const avatar = b.querySelector('div:first-child');
+        if (avatar) { avatar.style.background = '#e8edf5'; avatar.style.color = '#1e4575'; }
     });
     btn.style.background = '#1e4575';
     btn.style.color = '#fff';
     btn.style.borderColor = '#1e4575';
-    btn.querySelector('div:first-child').style.background = 'rgba(255,255,255,0.25)';
-    btn.querySelector('div:first-child').style.color = '#fff';
+    const avatar = btn.querySelector('div:first-child');
+    if (avatar) { avatar.style.background = 'rgba(255,255,255,0.25)'; avatar.style.color = '#fff'; }
+    // Update label and enable save
+    const label = document.getElementById('vis-for-label');
+    if (label) label.textContent = 'for ' + userName;
+    const saveBtn = document.querySelector('#vis-form button[type=submit]');
+    if (saveBtn) saveBtn.disabled = false;
     fetch('/api/user-visibility/' + userId)
         .then(r => r.json())
         .then(data => {
