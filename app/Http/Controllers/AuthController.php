@@ -157,11 +157,11 @@ class AuthController extends Controller
             'updated_at' => now(),
         ]);
 
-        // For testing: skip email, show code on verify page
-        // \Mail::to($request->email)->send(new \App\Mail\EmailVerificationCode($code, $request->name));
+        // Send OTP via email
+        \Mail::to($request->email)->send(new \App\Mail\EmailVerificationCode($code, $request->name));
 
         return redirect()->route('register.verify', ['email' => $request->email])
-            ->with('success', "Verification code: {$code} (testing mode — no email sent)");
+            ->with('success', "A verification code has been sent to {$request->email}.");
     }
 
     public function showVerify(Request $request)
