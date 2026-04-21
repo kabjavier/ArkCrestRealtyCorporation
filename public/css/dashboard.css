@@ -3625,6 +3625,7 @@ button#notificationToggle:hover {
     align-items: center;
     gap: 10px;
     border-left: 4px solid #A37929;
+    overflow: hidden;
 }
 
 .custom-toast.show {
