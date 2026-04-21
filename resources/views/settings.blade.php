@@ -1237,7 +1237,7 @@
                     <button type="submit" class="st-btn st-btn-primary st-btn-sm">Restore</button>
                   </form>
                   <form method="POST" action="{{ route('expenses.purge', $exp->id) }}" onsubmit="return confirm('Permanently delete this record?')">@csrf @method('DELETE')
-                    <button type="submit" class="st-btn st-btn-danger st-btn-sm">Purge</button>
+                    <button type="submit" class="st-btn st-btn-danger st-btn-sm">Delete</button>
                   </form>
                 </div>
               </td>
@@ -1264,7 +1264,7 @@
             </form>
             @endif
             <form method="POST" action="{{ route('settings.deleted.purge', $log->id) }}" onsubmit="return confirm('Permanently delete?')">@csrf @method('DELETE')
-              <button type="submit" class="st-btn st-btn-danger st-btn-sm">Purge</button>
+              <button type="submit" class="st-btn st-btn-danger st-btn-sm">Delete</button>
             </form>
           </div>
         </div>
