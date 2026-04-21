@@ -29,8 +29,16 @@ return new class extends Migration
                 $table->string('mode_of_payment')->nullable()->after('commission');
             if (!Schema::hasColumn('commission_requests', 'reservation_date'))
                 $table->date('reservation_date')->nullable()->after('mode_of_payment');
+            if (!Schema::hasColumn('commission_requests', 'price_sqm'))
+                $table->decimal('price_sqm', 15, 2)->nullable()->after('reservation_date');
+            if (!Schema::hasColumn('commission_requests', 'lot_area'))
+                $table->decimal('lot_area', 15, 4)->nullable()->after('price_sqm');
+            if (!Schema::hasColumn('commission_requests', 'discount'))
+                $table->decimal('discount', 15, 2)->nullable()->after('lot_area');
+            if (!Schema::hasColumn('commission_requests', 'commission_percent'))
+                $table->decimal('commission_percent', 8, 4)->nullable()->after('discount');
             if (!Schema::hasColumn('commission_requests', 'remarks'))
-                $table->text('remarks')->nullable()->after('reservation_date');
+                $table->text('remarks')->nullable()->after('commission_percent');
         });
     }
 

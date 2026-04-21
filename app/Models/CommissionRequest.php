@@ -29,15 +29,29 @@ class CommissionRequest extends Model
         'number_of_units',
         'net_tcp',
         'commission',
-        'mode_of_payment'
+        'commission_percent',
+        'mode_of_payment',
+        'reservation_date',
+        'price_sqm',
+        'lot_area',
+        'discount',
+        'remarks',
+        'status',
     ];
 
     protected $casts = [
         'date_requested' => 'date',
         'date_released' => 'date',
         'date_of_amount_returned' => 'date',
+        'reservation_date' => 'date',
         'requested_amount' => 'decimal:2',
         'total_expenses' => 'decimal:2',
-        'amount_returned' => 'decimal:2'
+        'amount_returned' => 'decimal:2',
+        'price_sqm' => 'decimal:2',
+        'lot_area' => 'decimal:4',
+        'discount' => 'decimal:2',
+        'net_tcp' => 'decimal:2',
+        'commission' => 'decimal:2',
+        'commission_percent' => 'decimal:4',
     ];
 }
