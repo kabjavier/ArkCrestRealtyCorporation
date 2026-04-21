@@ -26,23 +26,29 @@ class CommissionMonitoringController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'project_name'      => 'required|string|max:255',
-            'property_details'  => 'nullable|string|max:255',
-            'client_name'       => 'required|string|max:255',
-            'terms_of_payment'  => 'required|string|max:255',
-            'agent_name'        => 'required|string|max:255',
-            'number_of_units'   => 'nullable|integer|min:1',
-            'net_tcp'           => 'nullable|numeric',
-            'commission'        => 'nullable|numeric',
-            'mode_of_payment'   => 'nullable|string|max:255',
-            'date_requested'    => 'nullable|date',
-            'date_released'     => 'nullable|date',
-            'status'            => 'nullable|string|max:50',
-        ]);
-        CommissionRequest::create($validated);
-        \App\Models\ActivityLog::log('create', 'Commission Monitoring', "Added commission request for client '{$validated['client_name']}'");
-        return redirect()->route('commission-monitoring')->with('success', 'Commission request added.');
+        try {
+            $validated = $request->validate([
+                'project_name'      => 'required|string|max:255',
+                'property_details'  => 'nullable|string|max:255',
+                'client_name'       => 'required|string|max:255',
+                'terms_of_payment'  => 'required|string|max:255',
+                'agent_name'        => 'required|string|max:255',
+                'number_of_units'   => 'nullable|integer|min:1',
+                'net_tcp'           => 'nullable|numeric',
+                'commission'        => 'nullable|numeric',
+                'mode_of_payment'   => 'nullable|string|max:255',
+                'date_requested'    => 'nullable|date',
+                'date_released'     => 'nullable|date',
+                'status'            => 'nullable|string|max:50',
+            ]);
+            CommissionRequest::create($validated);
+            \App\Models\ActivityLog::log('create', 'Commission Monitoring', "Added commission request for client '{$validated['client_name']}'");
+            return redirect()->route('commission-monitoring')->with('success', 'Commission request added.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Failed to save: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function destroy($id)

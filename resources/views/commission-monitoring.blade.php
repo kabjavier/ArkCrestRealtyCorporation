@@ -67,6 +67,14 @@
         <div class="section-header-commission">
             <h2>ADD NEW COMMISSION REQUEST</h2>
         </div>
+        @if(session('error'))
+        <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">{{ session('error') }}</div>
+        @endif
+        @if($errors->any())
+        <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">
+            @foreach($errors->all() as $error)<div>• {{ $error }}</div>@endforeach
+        </div>
+        @endif
         <form id="cmAddForm" class="commission-form" action="{{ route('commission-monitoring.store') }}" method="POST">
             @csrf
             <div class="form-section">
