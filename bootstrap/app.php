@@ -29,6 +29,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Redirect back to login on CSRF token expiry
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->routeIs('logout') || $request->is('logout')) {
+                return redirect()->route('login');
+            }
             return redirect()->route('login')->with('error', 'Your session expired. Please try again.');
         });
         // Handle login rate limiting
