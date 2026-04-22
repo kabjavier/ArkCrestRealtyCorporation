@@ -1112,8 +1112,16 @@
 
           <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;">
             @foreach($visGroups as $groupName => $pages)
+            @php $groupId = 'visgroup_'.preg_replace('/[^a-z0-9]/i','_',strtolower($groupName)); @endphp
             <div style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;">
-              <div style="font-weight:700;font-size:13px;color:#1e4575;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;">{{ $groupName }}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb;">
+                <span style="font-weight:700;font-size:13px;color:#1e4575;">{{ $groupName }}</span>
+                <div style="display:flex;gap:6px;">
+                  <button type="button" onclick="selectAllGroup('{{ $groupId }}', true)" style="font-size:11px;font-weight:600;color:#1e4575;background:#eff6ff;border:1px solid #bfdbfe;border-radius:5px;padding:2px 8px;cursor:pointer;">All</button>
+                  <button type="button" onclick="selectAllGroup('{{ $groupId }}', false)" style="font-size:11px;font-weight:600;color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb;border-radius:5px;padding:2px 8px;cursor:pointer;">None</button>
+                </div>
+              </div>
+              <div id="{{ $groupId }}">
               @foreach($pages as $key => $label)
               <div style="display:flex;align-items:center;gap:8px;padding:4px 0;{{ str_starts_with($label,'↳') ? 'padding-left:12px;' : '' }}">
                 <input type="checkbox" id="vis_{{ str_replace(['.', '-'], '_', $key) }}" name="visible_pages[]" value="{{ $key }}"
@@ -1122,6 +1130,7 @@
                 <label for="vis_{{ str_replace(['.', '-'], '_', $key) }}" style="font-size:13px;color:#374151;cursor:pointer;">{{ $label }}</label>
               </div>
               @endforeach
+              </div>
             </div>
             @endforeach
           </div>
@@ -1837,6 +1846,10 @@ function showPanel(name) {
     const btn   = document.getElementById('nav-' + name);
     if (panel) panel.classList.add('active');
     if (btn)   btn.classList.add('active');
+}
+
+function selectAllGroup(groupId, checked) {
+    document.querySelectorAll('#' + groupId + ' input[type=checkbox]').forEach(cb => cb.checked = checked);
 }
 
 function selectVisUser(userId, btn, userName) {
