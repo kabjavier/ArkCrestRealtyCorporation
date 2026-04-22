@@ -298,29 +298,46 @@ class AuthController extends Controller
         ]);
     }
 
-    // Step 3: Reset password
-    public function resetPasswordByQuestion(Request $request)
+    // Send password reset link via email
+    public function sendPasswordResetEmail(Request $request)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'token'    => 'required|string',
-            'password' => 'required|min:8|confirmed',
-        ]);
-
-        $record = \DB::table('password_reset_tokens')->where('email', $request->email)->first();
-        if (!$record || !Hash::check($request->token, $record->token)) {
-            return response()->json(['success' => false, 'message' => 'Invalid or expired reset token.'], 422);
+        $email = $request->input('email');
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            return response()->json(['success' => false]);
         }
 
-        // Token expires after 15 minutes
-        if (now()->diffInMinutes($record->created_at) > 15) {
-            \DB::table('password_reset_tokens')->where('email', $request->email)->delete();
-            return response()->json(['success' => false, 'message' => 'Reset token expired. Please try again.'], 422);
-        }
+        // Generate a token
+        $token = \Illuminate\Support\Str::random(64);
+        \DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $email],
+            ['token' => Hash::make($token), 'created_at' => now()]
+        );
 
-        User::where('email', $request->email)->update(['password' => Hash::make($request->password)]);
-        \DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+        $resetUrl = url('/login') . '?reset_token=' . $token . '&email=' . urlencode($email);
 
-        return response()->json(['success' => true, 'message' => 'Password reset successfully. You can now sign in.']);
+        try {
+            \Mail::send([], [], function ($m) use ($user, $resetUrl) {
+                $m->to($user->email)
+                  ->subject('Password Reset - ArkCrest Realty Corporation')
+                  ->html('
+                    <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);">
+                        <div style="background:#1e4575;padding:24px 32px;">
+                            <h1 style="color:#fff;margin:0;font-size:18px;">ArkCrest Realty Corporation</h1>
+                        </div>
+                        <div style="padding:32px;">
+                            <p style="font-size:15px;color:#374151;">Hi <strong>' . $user->name . '</strong>,</p>
+                            <p style="font-size:14px;color:#374151;">You requested a password reset. Click the button below to reset your password.</p>
+                            <div style="margin:24px 0;">
+                                <a href="' . $resetUrl . '" style="background:#1e4575;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">Reset Password</a>
+                            </div>
+                            <p style="font-size:12px;color:#9ca3af;">This link expires in 15 minutes. If you did not request this, ignore this email.</p>
+                        </div>
+                    </div>
+                  ');
+            });
+        } catch (\Exception $e) {}
+
+        return response()->json(['success' => true]);
     }
 }

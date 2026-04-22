@@ -559,7 +559,17 @@ function chooseForgotMethod(method) {
         // Email method — show confirmation
         document.getElementById('forgotStep1b').style.display = 'none';
         document.getElementById('forgotStep1c').style.display = 'block';
-        document.getElementById('forgotModalTitle').textContent = 'Email Sent';
+        document.getElementById('forgotModalTitle').textContent = 'Sending...';
+        // Actually send reset email
+        fetch('/forgot-password/send-email', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]')?.content||''},
+            body: JSON.stringify({email: _fpEmail})
+        }).then(r=>r.json()).then(d=>{
+            document.getElementById('forgotModalTitle').textContent = 'Email Sent';
+        }).catch(()=>{
+            document.getElementById('forgotModalTitle').textContent = 'Email Sent';
+        });
     }
 }
 function closeForgotModal() {

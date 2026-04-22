@@ -19,6 +19,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password/question', [AuthController::class, 'getSecurityQuestion'])->name('forgot.question');
     Route::post('/forgot-password/verify',   [AuthController::class, 'checkSecurityQuestion'])->name('forgot.verify');
     Route::post('/forgot-password/reset',    [AuthController::class, 'resetPasswordByQuestion'])->name('forgot.reset');
+    Route::post('/forgot-password/send-email', [AuthController::class, 'sendPasswordResetEmail'])->name('forgot.email');
 });
 
 // Root redirect to login
