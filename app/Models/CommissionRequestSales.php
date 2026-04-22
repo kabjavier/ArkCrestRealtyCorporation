@@ -21,7 +21,6 @@ class CommissionRequestSales extends Model
         'price_sqm',
         'tcp',
         'discount',
-        'discount_value',
         'net_tcp',
         'terms_of_payment',
         'agent_name',
