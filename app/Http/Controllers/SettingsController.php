@@ -8,6 +8,7 @@ use App\Models\ExpenseCategory;
 use App\Models\User;
 use App\Models\ActivityLog;
 use App\Models\TeamMonthlyQuota;
+use Illuminate\Support\Facades\Schema;
 
 class SettingsController extends Controller
 {
@@ -149,7 +150,7 @@ class SettingsController extends Controller
                 if ($user) $r->agent_name = $user->name;
             }),
             'personnelContacts'  => \App\Models\PersonnelContact::orderBy('id')->get(),
-            'onlineUserIds'      => \Schema::hasColumn('users', 'last_seen_at')
+            'onlineUserIds'      => Schema::hasColumn('users', 'last_seen_at')
                 ? User::whereNotNull('last_seen_at')->where('last_seen_at', '>=', now()->subMinutes(2))->pluck('id')->toArray()
                 : [],
         ];
