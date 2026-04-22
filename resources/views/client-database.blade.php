@@ -84,7 +84,7 @@
                 </div>
                 <div class="form-group">
                     <label>DISCOUNT VALUE <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
-                    <input type="text" id="f_discount_val" placeholder="0.00" readonly style="background:#f3f4f6;cursor:not-allowed;color:#374151;">
+                    <input type="number" id="f_discount_val" name="discount_value" placeholder="0.00" step="0.01" min="0" oninput="computeDiscountFromValue()" style="color:#374151;">
                 </div>
                 <div class="form-group">
                     <label>NET TCP <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
@@ -415,8 +415,18 @@ function computeDiscount(){
     var pct  = parseFloat(document.getElementById('f_discount_pct').value) || 0;
     var val  = tcp * (pct / 100);
     var net  = tcp - val;
-    document.getElementById('f_discount_val').value = val ? val.toFixed(10).replace(/\.?0+$/, '') : '';
-    document.getElementById('f_net_tcp').value = net ? net.toFixed(10).replace(/\.?0+$/, '') : '';
+    document.getElementById('f_discount_val').value = val ? val.toFixed(2) : '';
+    document.getElementById('f_net_tcp').value = net ? net.toFixed(2) : '';
+    document.getElementById('f_net_tcp_display').value = net ? fmtComma(net) : '';
+}
+function computeDiscountFromValue(){
+    var tcp = parseFloat(document.getElementById('f_tcp').value) || 0;
+    var val = parseFloat(document.getElementById('f_discount_val').value) || 0;
+    var pct = tcp > 0 ? (val / tcp) * 100 : 0;
+    var net = tcp - val;
+    document.getElementById('f_discount_pct').value = pct ? pct.toFixed(10).replace(/\.?0+$/, '') : '';
+    document.getElementById('f_net_tcp').value = net ? net.toFixed(2) : '';
+    document.getElementById('f_net_tcp_display').value = net ? fmtComma(net) : '';
 }
 function selectTerm(t){ document.getElementById('terms_of_payment').value=t; document.getElementById('termsDropdown').style.display='none'; }
 function filterTerms(v){ var d=document.getElementById('termsDropdown'),items=d.children,f=v.toUpperCase(),has=false; for(var i of items){ var show=i.textContent.toUpperCase().includes(f); i.style.display=show?'':'none'; if(show)has=true; } d.style.display=has?'block':'none'; }
