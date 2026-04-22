@@ -84,7 +84,7 @@
                 </div>
                 <div class="form-group">
                     <label>DISCOUNT VALUE <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
-                    <input type="number" id="f_discount_val" name="discount_value" placeholder="0.00" step="0.01" min="0" oninput="computeDiscountFromValue()" style="color:#374151;">
+                    <input type="number" id="f_discount_val" placeholder="0.00" step="0.01" min="0" oninput="computeDiscountFromValue()" style="color:#374151;">
                 </div>
                 <div class="form-group">
                     <label>NET TCP <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
