@@ -136,24 +136,29 @@
 
 <div class="cal-page">
     {{-- Top Bar --}}
-    <div class="cal-topbar">
-        <div>
-            <div class="cal-page-title">Calendar</div>
-            <div class="cal-page-sub">Commission release schedule &bull; {{ $monthNames[$month] }} {{ $year }}</div>
+    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:16px;padding:22px 32px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div style="position:relative;z-index:2;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;">Finance</div>
+            <h1 style="font-size:24px;font-weight:700;color:white;margin:0 0 2px;">Calendar</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0;">Commission release schedule &bull; {{ $monthNames[$month] }} {{ $year }}</p>
         </div>
-        <div class="cal-controls">
+        <div class="cal-controls" style="position:relative;z-index:2;">
             <form method="GET" action="{{ route('calendar') }}" style="display:flex;align-items:center;gap:6px;">
                 <input type="hidden" name="month" value="{{ $month }}">
-                <select name="year" class="cal-year-sel" onchange="this.form.submit()">
+                <select name="year" class="cal-year-sel" onchange="this.form.submit()" style="background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;">
                     @foreach($availableYears as $y)
-                        <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
+                        <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }} style="color:#1e4575;background:white;">{{ $y }}</option>
                     @endforeach
                 </select>
             </form>
-            <a href="{{ route('calendar', ['month'=>$prevMonth,'year'=>$prevYear]) }}" class="cal-nav-btn">&#8249;</a>
-            <span class="cal-month-pill">{{ $monthNames[$month] }} {{ $year }}</span>
-            <a href="{{ route('calendar', ['month'=>$nextMonth,'year'=>$nextYear]) }}" class="cal-nav-btn">&#8250;</a>
-            <a href="{{ route('calendar', ['month'=>date('n'),'year'=>date('Y')]) }}" class="cal-today-btn">Today</a>
+            <a href="{{ route('calendar', ['month'=>$prevMonth,'year'=>$prevYear]) }}" class="cal-nav-btn" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:white;">&#8249;</a>
+            <span class="cal-month-pill" style="background:rgba(255,255,255,.15);color:white;border:1.5px solid rgba(255,255,255,.3);">{{ $monthNames[$month] }} {{ $year }}</span>
+            <a href="{{ route('calendar', ['month'=>$nextMonth,'year'=>$nextYear]) }}" class="cal-nav-btn" style="background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:white;">&#8250;</a>
+            <a href="{{ route('calendar', ['month'=>date('n'),'year'=>date('Y')]) }}" class="cal-today-btn" style="background:rgba(255,255,255,.2);color:white;border:1.5px solid rgba(255,255,255,.3);">Today</a>
+        </div>
+        <div style="position:absolute;top:0;right:0;width:300px;height:100%;pointer-events:none;">
+            <div style="position:absolute;width:220px;height:220px;top:-60px;right:-40px;border-radius:50%;background:rgba(255,255,255,.06);"></div>
+            <div style="position:absolute;width:140px;height:140px;top:20px;right:120px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
         </div>
     </div>
 

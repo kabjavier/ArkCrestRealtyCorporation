@@ -4,15 +4,23 @@
 <link rel="stylesheet" href="{{ asset('css/departmental-expenses-enhanced.css') }}?v={{ time() }}">
 
 <div class="commission-requests-page">
-    <!-- Page Title -->
-    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;">
-        <h2 class="page-title">Departmental Expenses</h2>
+    <!-- Page Banner -->
+    <div class="page-welcome-banner" style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:16px;padding:28px 36px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;">
+        <div style="position:relative;z-index:2;">
+            <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px;">Finance</div>
+            <h1 style="font-size:26px;font-weight:700;color:white;margin:0 0 4px;">Departmental Expenses</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0;">Budget & expense tracking per department</p>
+        </div>
         @if(auth()->user()->isAdmin())
-        <button onclick="document.getElementById('addDeptModal').style.display='flex'" style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#1e4575;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
+        <button onclick="document.getElementById('addDeptModal').style.display='flex'" style="display:flex;align-items:center;gap:6px;padding:10px 18px;background:rgba(255,255,255,.15);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;backdrop-filter:blur(4px);position:relative;z-index:2;white-space:nowrap;">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Add Department
         </button>
         @endif
+        <div style="position:absolute;top:0;right:0;width:300px;height:100%;pointer-events:none;">
+            <div style="position:absolute;width:220px;height:220px;top:-60px;right:-40px;border-radius:50%;background:rgba(255,255,255,.06);"></div>
+            <div style="position:absolute;width:140px;height:140px;top:40px;right:120px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
+        </div>
     </div>
 
     {{-- Add Department Modal --}}
