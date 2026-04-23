@@ -1007,7 +1007,7 @@
           <div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;" id="vis-user-tabs">
             @foreach($staffUsers as $u)
               <button type="button" onclick="selectVisUser({{ $u->id }}, this, '{{ addslashes($u->name) }}')"
-                style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;border-radius:12px;cursor:pointer;border:2px solid {{ $selectedUserId == $u->id ? '#1e4575' : '#e5e7eb' }};background:{{ $selectedUserId == $u->id ? '#1e4575' : '#fff' }};color:{{ $selectedUserId == $u->id ? '#fff' : '#374151' }};min-width:100px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 18px;border-radius:12px;cursor:pointer;border:2px solid {{ $selectedUserId == $u->id ? '#1e4575' : '#e5e7eb' }};background:{{ $selectedUserId == $u->id ? '#1e4575' : '#fff' }};color:{{ $selectedUserId == $u->id ? '#fff' : '#374151' }};width:110px;box-shadow:0 1px 4px rgba(0,0,0,0.06);">
                 <div style="position:relative;">
                 @if($u->avatar)
                   <img src="{{ \Storage::disk('public')->url($u->avatar) }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid {{ $selectedUserId == $u->id ? 'rgba(255,255,255,0.4)' : '#e5e7eb' }};">
@@ -1020,7 +1020,7 @@
                   <span style="position:absolute;bottom:1px;right:1px;width:11px;height:11px;background:#22c55e;border-radius:50%;border:2px solid {{ $selectedUserId == $u->id ? '#1e4575' : '#fff' }};"></span>
                 @endif
                 </div>
-                <div style="font-size:12px;font-weight:600;text-align:center;line-height:1.3;">{{ $u->name }}</div>
+                <div style="font-size:12px;font-weight:600;text-align:center;line-height:1.3;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $u->name }}</div>
                 <div style="font-size:10px;opacity:0.75;text-align:center;">{{ ucfirst($u->status) }}</div>
               </button>
             @endforeach
