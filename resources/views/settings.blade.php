@@ -907,7 +907,7 @@
 
     </div>
 
-    @if(auth()->user()->isAdmin())
+    @if($isAdmin || $canSeeS('settings.users'))
 
     {{-- USERS PANEL --}}
 
@@ -1031,6 +1031,10 @@
       </div></div>
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.visibility'))
 
     {{-- VISIBILITY PANEL --}}
 
@@ -1188,6 +1192,10 @@
       </div>
     </div>
 
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.activity'))
+
     {{-- ACTIVITY LOG PANEL --}}
 
     <div class="st-panel" id="panel-activity">
@@ -1225,6 +1233,10 @@
       </div></div>
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.deleted'))
 
     {{-- DELETED RECORDS PANEL --}}
 
@@ -1297,6 +1309,10 @@
       </div></div>
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.permissions'))
 
     {{-- PERMISSION REQUESTS PANEL --}}
 
@@ -1413,6 +1429,10 @@
       @endif
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.teams'))
 
     {{-- TEAMS PANEL --}}
 
@@ -1534,6 +1554,10 @@
 
     </div>
 
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.period-lock'))
+
     {{-- PERIOD LOCK PANEL --}}
 
     <div class="st-panel" id="panel-period-lock">
@@ -1616,6 +1640,10 @@
 
     </div>
 
+    @endif
+
+    @if($isAdmin)
+
     {{-- REJECTED TRIPPINGS PANEL --}}
 
     <div class="st-panel" id="panel-rejected-trippings">
@@ -1655,6 +1683,10 @@
       </div></div>
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.employee'))
 
     {{-- EMPLOYEE DIRECTORY PANEL --}}
 
@@ -1748,6 +1780,10 @@
       </div>
 
     </div>
+
+    @endif
+
+    @if($isAdmin || $canSeeS('settings.personnel'))
 
     {{-- ARC PERSONNEL CONTACT LIST PANEL --}}
     <div class="st-panel" id="panel-personnel-contacts">
