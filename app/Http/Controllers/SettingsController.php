@@ -12,8 +12,15 @@ use Illuminate\Support\Facades\Schema;
 
 class SettingsController extends Controller
 {
-    public function index()
-    {
+    // Finance pages hidden by default for staff role
+    const STAFF_DEFAULT_HIDDEN = [
+        'dashboard',
+        'departments',
+        'summary-report',
+        'commission-monitoring',
+        'commission-monitoring.dashboard',
+        'calendar',
+    ];
         return view('settings', $this->getSettingsData());
     }
 
@@ -84,7 +91,12 @@ class SettingsController extends Controller
         $request = request();
         $role = in_array($request->input('role'), ['admin', 'staff']) ? $request->input('role') : 'staff';
         $user = User::findOrFail($id);
-        $user->update(['status' => 'active', 'role' => $role]);
+        $updates = ['status' => 'active', 'role' => $role];
+        // Set default hidden pages for staff if not already customized
+        if ($role === 'staff' && empty($user->hidden_pages)) {
+            $updates['hidden_pages'] = self::STAFF_DEFAULT_HIDDEN;
+        }
+        $user->update($updates);
         \App\Models\SystemNotification::where('type', 'user_pending')->where('is_read', false)->where('message', 'like', '%'.$user->name.'%')->update(['is_read' => true]);
         ActivityLog::log('approve', 'Settings', "Approved user ID: {$id} with role '{$role}'");
         try {
@@ -253,14 +265,15 @@ class SettingsController extends Controller
             'date_hired'  => 'required|date',
         ]);
         User::create([
-            'name'        => $request->name,
-            'employee_id' => $request->employee_id,
-            'position'    => $request->position,
-            'date_hired'  => $request->date_hired,
-            'email'       => 'pending_' . strtolower(str_replace([' ', '/'], '_', $request->employee_id)) . '@arckrest.local',
-            'password'    => bcrypt(\Illuminate\Support\Str::random(32)),
-            'role'        => 'staff',
-            'status'      => 'pre_registered',
+            'name'         => $request->name,
+            'employee_id'  => $request->employee_id,
+            'position'     => $request->position,
+            'date_hired'   => $request->date_hired,
+            'email'        => 'pending_' . strtolower(str_replace([' ', '/'], '_', $request->employee_id)) . '@arckrest.local',
+            'password'     => bcrypt(\Illuminate\Support\Str::random(32)),
+            'role'         => 'staff',
+            'status'       => 'pre_registered',
+            'hidden_pages' => self::STAFF_DEFAULT_HIDDEN,
         ]);
         return redirect()->route('settings')->with('emp_success', "Employee '{$request->name}' added successfully.")->with('open_section', $request->has('redirect_to_visibility') ? 'visibility' : 'employee-directory');
     }
