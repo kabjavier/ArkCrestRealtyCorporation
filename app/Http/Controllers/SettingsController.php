@@ -316,12 +316,11 @@ class SettingsController extends Controller
 
         if ($request->hasFile('avatar')) {
             // Delete old avatar
-            if ($user->avatar && file_exists(public_path($user->avatar))) {
-                unlink(public_path($user->avatar));
+            if ($user->avatar) {
+                \Storage::disk('public')->delete($user->avatar);
             }
             $file = $request->file('avatar');
-            $filename = 'avatars/'.time().'_'.$user->id.'.'.$file->getClientOriginalExtension();
-            $file->move(public_path('avatars'), basename($filename));
+            $filename = $file->store('avatars', 'public');
             $data['avatar'] = $filename;
         }
 
