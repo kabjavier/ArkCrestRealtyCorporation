@@ -92,16 +92,13 @@ class SendEventReminders extends Command
             });
 
         if (!empty($events)) {
-            $subject = "ArkCrest Reminder: Events on {$displayDate}";
-            $html = $this->buildEmailHtml($events, $displayDate, 'Tomorrow\'s Important Events');
-            foreach ($recipients as $email) {
-                try {
-                    Mail::html($html, fn($m) => $m->to($email)->subject($subject));
-                    $this->info("Day-before reminder sent to: {$email}");
-                } catch (\Exception $e) {
-                    $this->error("Failed to send to {$email}: " . $e->getMessage());
-                }
-            }
+            $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
+            \App\Services\AdminEmailNotifier::send(
+                "ArkCrest Reminder: Events on {$displayDate}",
+                "Tomorrow's Important Events — {$displayDate}",
+                $rows
+            );
+            $this->info("Day-before reminder sent.");
         } else {
             $this->info('No events for tomorrow.');
         }
@@ -142,16 +139,13 @@ class SendEventReminders extends Command
             });
 
         if (!empty($events)) {
-            $subject = "ArkCrest Reminder: Events TODAY — {$displayDate}";
-            $html = $this->buildEmailHtml($events, $displayDate, 'Today\'s Important Events');
-            foreach ($recipients as $email) {
-                try {
-                    Mail::html($html, fn($m) => $m->to($email)->subject($subject));
-                    $this->info("Same-day reminder sent to: {$email}");
-                } catch (\Exception $e) {
-                    $this->error("Failed to send to {$email}: " . $e->getMessage());
-                }
-            }
+            $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
+            \App\Services\AdminEmailNotifier::send(
+                "ArkCrest Reminder: Events TODAY — {$displayDate}",
+                "Today's Important Events — {$displayDate}",
+                $rows
+            );
+            $this->info("Same-day reminder sent.");
         } else {
             $this->info('No events for today.');
         }
