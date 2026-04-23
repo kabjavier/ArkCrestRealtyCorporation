@@ -18,11 +18,11 @@ class CalendarController extends Controller
         $dateTo   = date('Y-m-t', strtotime($dateFrom));
 
         // Commission sales (reservations & releases)
-        $sales = CommissionRequestSales::whereBetween('date_requested', [$dateFrom, $dateTo])
-            ->orWhereBetween('date_released', [$dateFrom, $dateTo])
-            ->orWhereBetween('reservation_date', [$dateFrom, $dateTo])
-            ->orWhereBetween('date_of_downpayment', [$dateFrom, $dateTo])
-            ->get();
+        $sales = CommissionRequestSales::where(function($q) use ($dateFrom, $dateTo) {
+            $q->whereBetween('date_released', [$dateFrom, $dateTo])
+              ->orWhereBetween('reservation_date', [$dateFrom, $dateTo])
+              ->orWhereBetween('date_of_downpayment', [$dateFrom, $dateTo]);
+        })->get();
 
         // Site visits / tripping schedules
         $trips = TripSchedule::whereBetween('tripping_date', [$dateFrom, $dateTo])
@@ -48,21 +48,6 @@ class CalendarController extends Controller
                     'id'      => $s->id,
                 ]);
             }
-            // Date requested event
-            if ($s->date_requested && $s->date_requested->month == $month && $s->date_requested->year == $year) {
-                $day = $s->date_requested->day;
-                if (!$eventsByDay->has($day)) $eventsByDay->put($day, collect());
-                $eventsByDay->get($day)->push([
-                    'type'    => 'sale',
-                    'label'   => $s->client_name,
-                    'sub'     => $s->project_name,
-                    'agent'   => $s->agent_name,
-                    'amount'  => $s->net_tcp,
-                    'date'    => $s->date_requested->format('Y-m-d'),
-                    'status'  => $s->status,
-                    'id'      => $s->id,
-                ]);
-            }
             // Commission release event
             if ($s->date_released && $s->date_released->month == $month && $s->date_released->year == $year) {
                 $day = $s->date_released->day;
@@ -78,8 +63,8 @@ class CalendarController extends Controller
                     'id'      => $s->id,
                 ]);
             }
-            // Downpayment event
-            if ($s->date_of_downpayment && $s->date_of_downpayment->month == $month && $s->date_of_downpayment->year == $year) {
+            // Downpayment event — only if not yet Done
+            if ($s->date_of_downpayment && $s->date_of_downpayment->month == $month && $s->date_of_downpayment->year == $year && $s->client_status !== 'Done') {
                 $day = $s->date_of_downpayment->day;
                 if (!$eventsByDay->has($day)) $eventsByDay->put($day, collect());
                 $eventsByDay->get($day)->push([
