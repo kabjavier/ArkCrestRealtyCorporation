@@ -67,6 +67,7 @@ class CommissionMonitoringController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
+            \Log::error('Commission store error: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
             return redirect()->back()->with('error', 'Failed to save: ' . $e->getMessage())->withInput();
         }
     }

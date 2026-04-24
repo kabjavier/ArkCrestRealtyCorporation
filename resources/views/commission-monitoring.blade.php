@@ -71,6 +71,9 @@
         @if(session('error'))
         <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">{{ session('error') }}</div>
         @endif
+        @if(session('success'))
+        <div style="background:#dcfce7;color:#166534;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">✓ {{ session('success') }}</div>
+        @endif
         @if($errors->any())
         <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">
             @foreach($errors->all() as $error)<div>• {{ $error }}</div>@endforeach
