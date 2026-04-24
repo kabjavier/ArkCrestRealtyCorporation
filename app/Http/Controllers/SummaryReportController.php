@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\CommissionRequest;
+use App\Models\DepartmentalExpense;
 use App\Models\SummaryReport;
 use Carbon\Carbon;
 
@@ -15,7 +16,7 @@ class SummaryReportController extends Controller
         $currentYear = date('Y');
         
         // Get available years from commission_requests and summary_reports
-        $availablePeriods = CommissionRequest::selectRaw('MONTH(date_requested) as month, YEAR(date_requested) as year')
+        $availablePeriods = DepartmentalExpense::selectRaw('MONTH(date_requested) as month, YEAR(date_requested) as year')
             ->whereNotNull('date_requested')
             ->groupBy('year', 'month')
             ->orderBy('year', 'desc')
@@ -57,7 +58,7 @@ class SummaryReportController extends Controller
         $totalExpenses = 0;
         
         foreach ($departments as $deptKey => $deptName) {
-            $expenses = CommissionRequest::where('department', $deptKey)
+            $expenses = DepartmentalExpense::where('department', $deptKey)
                 ->whereYear('date_requested', $selectedYear)
                 ->whereMonth('date_requested', $selectedMonth)
                 ->sum('total_expenses');
@@ -122,7 +123,7 @@ class SummaryReportController extends Controller
         $selectedYear = $request->get('year', $currentYear);
 
         // Get distinct years from data
-        $availableYears = \App\Models\CommissionRequest::selectRaw('YEAR(date_requested) as year')
+        $availableYears = DepartmentalExpense::selectRaw('YEAR(date_requested) as year')
             ->whereNotNull('date_requested')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -178,7 +179,7 @@ class SummaryReportController extends Controller
             $monthTotalExpenses = 0;
             
             foreach ($departments as $deptKey => $deptName) {
-                $expenses = CommissionRequest::where('department', $deptKey)
+                $expenses = DepartmentalExpense::where('department', $deptKey)
                     ->whereYear('date_requested', $selectedYear)
                     ->whereMonth('date_requested', $month)
                     ->sum('total_expenses');

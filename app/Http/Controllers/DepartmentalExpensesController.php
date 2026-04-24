@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\CommissionRequest;
+use App\Models\DepartmentalExpense;
 use App\Models\ActivityLog;
 use Carbon\Carbon;
 
@@ -54,7 +54,7 @@ class DepartmentalExpensesController extends Controller
 
     public function index()
     {
-        $requests = CommissionRequest::orderBy('date_requested', 'asc')->orderBy('id', 'asc')->get();
+        $requests = DepartmentalExpense::orderBy('date_requested', 'asc')->orderBy('id', 'asc')->get();
         
         // Get departments with their expenses
         $departments = \App\Models\Department::with('expenses', 'categories')->get();
@@ -76,7 +76,7 @@ class DepartmentalExpensesController extends Controller
         }
         
         // Get unique requestor names for autocomplete
-        $requestorNames = CommissionRequest::select('requestor_name')
+        $requestorNames = DepartmentalExpense::select('requestor_name')
             ->distinct()
             ->orderBy('requestor_name')
             ->pluck('requestor_name');
@@ -155,7 +155,7 @@ class DepartmentalExpensesController extends Controller
 
         $controlNumber = \DB::transaction(function() use ($month, $year) {
             $count = 1;
-            while (CommissionRequest::where('control_number', sprintf('ARCS-%s-%03d-%s', $month, $count, $year))->exists()) {
+            while (DepartmentalExpense::where('control_number', sprintf('ARCS-%s-%03d-%s', $month, $count, $year))->exists()) {
                 $count++;
             }
             return sprintf('ARCS-%s-%03d-%s', $month, $count, $year);
@@ -188,7 +188,7 @@ class DepartmentalExpensesController extends Controller
         }
 
         try {
-            $commissionRequest = CommissionRequest::create($validated);
+            $DepartmentalExpense = DepartmentalExpense::create($validated);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Failed to save. Please try again.'], 500);
         }
@@ -197,17 +197,17 @@ class DepartmentalExpensesController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Commission request created successfully',
-            'data' => $commissionRequest
+            'data' => $DepartmentalExpense
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $commissionRequest = CommissionRequest::findOrFail($id);
+        $DepartmentalExpense = DepartmentalExpense::findOrFail($id);
 
         // Check period lock on existing record
-        if ($commissionRequest->date_requested) {
-            $d = Carbon::parse($commissionRequest->date_requested);
+        if ($DepartmentalExpense->date_requested) {
+            $d = Carbon::parse($DepartmentalExpense->date_requested);
             if (\App\Models\PeriodLock::isLocked((int)$d->month, (int)$d->year)) {
                 return response()->json(['success' => false, 'message' => date('F Y', mktime(0,0,0,$d->month,1,$d->year)) . ' is locked. No changes allowed for this period.'], 422);
             }
@@ -269,8 +269,8 @@ class DepartmentalExpensesController extends Controller
         }
         
         // Check if control number is being changed and if it's unique
-        if ($validated['control_number'] !== $commissionRequest->control_number) {
-            $existingRequest = CommissionRequest::where('control_number', $validated['control_number'])
+        if ($validated['control_number'] !== $DepartmentalExpense->control_number) {
+            $existingRequest = DepartmentalExpense::where('control_number', $validated['control_number'])
                 ->where('id', '!=', $id)
                 ->first();
             
@@ -306,19 +306,19 @@ class DepartmentalExpensesController extends Controller
             $validated['amount_returned'] = $validated['requested_amount'] - $validated['total_expenses'];
         }
         
-        $commissionRequest->update($validated);
+        $DepartmentalExpense->update($validated);
         ActivityLog::log('update', 'Departmental Expenses', "Updated expense ID: {$id} ({$validated['department']} - {$validated['category']})");
         return response()->json([
             'success' => true,
             'message' => 'Commission request updated successfully',
-            'data' => $commissionRequest
+            'data' => $DepartmentalExpense
         ]);
     }
 
     public function restore($id)
     {
         if (!auth()->user()->isAdmin()) abort(403);
-        $record = \App\Models\CommissionRequest::onlyTrashed()->findOrFail($id);
+        $record = \App\Models\DepartmentalExpense::onlyTrashed()->findOrFail($id);
         $record->restore();
         ActivityLog::log('restore', 'Departmental Expenses', "Restored expense '{$record->control_number}'");
         return redirect()->route('settings')->with('success', 'Record restored.')->with('open_section', 'deleted');
@@ -327,7 +327,7 @@ class DepartmentalExpensesController extends Controller
     public function purge($id)
     {
         if (!auth()->user()->isAdmin()) abort(403);
-        $record = \App\Models\CommissionRequest::onlyTrashed()->findOrFail($id);
+        $record = \App\Models\DepartmentalExpense::onlyTrashed()->findOrFail($id);
         $record->forceDelete();
         ActivityLog::log('delete', 'Departmental Expenses', "Permanently deleted expense '{$record->control_number}'");
         return redirect()->route('settings')->with('success', 'Record permanently deleted.')->with('open_section', 'deleted');
@@ -335,31 +335,31 @@ class DepartmentalExpensesController extends Controller
 
     public function destroy($id)
     {
-        $commissionRequest = CommissionRequest::findOrFail($id);
+        $DepartmentalExpense = DepartmentalExpense::findOrFail($id);
 
         // Check period lock
-        if ($commissionRequest->date_requested) {
-            $d = Carbon::parse($commissionRequest->date_requested);
+        if ($DepartmentalExpense->date_requested) {
+            $d = Carbon::parse($DepartmentalExpense->date_requested);
             if (\App\Models\PeriodLock::isLocked((int)$d->month, (int)$d->year)) {
                 return response()->json(['success' => false, 'message' => date('F Y', mktime(0,0,0,$d->month,1,$d->year)) . ' is locked. No changes allowed for this period.'], 422);
             }
         }
 
-        ActivityLog::log('delete', 'Departmental Expenses', "Deleted expense ID: {$id} ({$commissionRequest->department} - {$commissionRequest->category})", [
-            'id'                     => $commissionRequest->id,
-            'control_number'         => $commissionRequest->control_number,
-            'requestor_name'         => $commissionRequest->requestor_name,
-            'department'             => $commissionRequest->department,
-            'category'               => $commissionRequest->category,
-            'date_requested'         => $commissionRequest->date_requested,
-            'requested_amount'       => $commissionRequest->requested_amount,
-            'status'                 => $commissionRequest->status,
-            'date_released'          => $commissionRequest->date_released,
-            'total_expenses'         => $commissionRequest->total_expenses,
-            'amount_returned'        => $commissionRequest->amount_returned,
-            'date_of_amount_returned'=> $commissionRequest->date_of_amount_returned,
+        ActivityLog::log('delete', 'Departmental Expenses', "Deleted expense ID: {$id} ({$DepartmentalExpense->department} - {$DepartmentalExpense->category})", [
+            'id'                     => $DepartmentalExpense->id,
+            'control_number'         => $DepartmentalExpense->control_number,
+            'requestor_name'         => $DepartmentalExpense->requestor_name,
+            'department'             => $DepartmentalExpense->department,
+            'category'               => $DepartmentalExpense->category,
+            'date_requested'         => $DepartmentalExpense->date_requested,
+            'requested_amount'       => $DepartmentalExpense->requested_amount,
+            'status'                 => $DepartmentalExpense->status,
+            'date_released'          => $DepartmentalExpense->date_released,
+            'total_expenses'         => $DepartmentalExpense->total_expenses,
+            'amount_returned'        => $DepartmentalExpense->amount_returned,
+            'date_of_amount_returned'=> $DepartmentalExpense->date_of_amount_returned,
         ]);
-        $commissionRequest->delete();
+        $DepartmentalExpense->delete();
         
         return response()->json([
             'success' => true,
@@ -372,7 +372,7 @@ class DepartmentalExpensesController extends Controller
     {
         $search = $request->get('search', '');
         
-        $departments = CommissionRequest::select('department')
+        $departments = DepartmentalExpense::select('department')
             ->distinct()
             ->when($search, function($query) use ($search) {
                 return $query->where('department', 'like', '%' . $search . '%');
@@ -390,7 +390,7 @@ class DepartmentalExpensesController extends Controller
         $search = $request->get('search', '');
         $department = $request->get('department', '');
         
-        $categories = CommissionRequest::select('category')
+        $categories = DepartmentalExpense::select('category')
             ->distinct()
             ->when($search, function($query) use ($search) {
                 return $query->where('category', 'like', '%' . $search . '%');
@@ -412,11 +412,11 @@ class DepartmentalExpensesController extends Controller
         
         if (empty($controlNumbers)) {
             // If no specific control numbers, get all requests
-            $requests = CommissionRequest::orderBy('control_number', 'asc')->get();
+            $requests = DepartmentalExpense::orderBy('control_number', 'asc')->get();
         } else {
             // Get specific control numbers
             $controlNumbersArray = explode(',', $controlNumbers);
-            $requests = CommissionRequest::whereIn('control_number', $controlNumbersArray)
+            $requests = DepartmentalExpense::whereIn('control_number', $controlNumbersArray)
                 ->orderBy('control_number', 'asc')
                 ->get();
         }

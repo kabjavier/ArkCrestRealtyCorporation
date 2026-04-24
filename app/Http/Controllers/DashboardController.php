@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Department;
+use App\Models\DepartmentalExpense;
 use App\Models\CommissionRequest;
 use App\Models\CommissionRequestSales;
 use App\Models\SummaryReport;
@@ -74,7 +75,7 @@ class DashboardController extends Controller
             // Sum requested_amount from commission_requests for this department (current month only)
             // Use case-insensitive comparison and trim whitespace
             // Filter by date_requested month
-            $deptExpenses = CommissionRequest::whereRaw('LOWER(TRIM(department)) = ?', [strtolower(trim($dept->name))])
+            $deptExpenses = DepartmentalExpense::whereRaw('LOWER(TRIM(department)) = ?', [strtolower(trim($dept->name))])
                 ->whereMonth('date_requested', $currentMonthNumber)
                 ->whereYear('date_requested', $currentYear)
                 ->sum('requested_amount');
@@ -91,7 +92,7 @@ class DashboardController extends Controller
             
             // Get expense breakdown by category for this department (current month only)
             $categories = [];
-            $requests = CommissionRequest::whereRaw('LOWER(TRIM(department)) = ?', [strtolower(trim($dept->name))])
+            $requests = DepartmentalExpense::whereRaw('LOWER(TRIM(department)) = ?', [strtolower(trim($dept->name))])
                 ->whereMonth('date_requested', $currentMonthNumber)
                 ->whereYear('date_requested', $currentYear)
                 ->whereNotNull('requested_amount')
