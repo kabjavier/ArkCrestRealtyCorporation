@@ -140,6 +140,10 @@ Route::middleware('auth')->group(function () {
     Route::patch('/client-database/{id}/status', [App\Http\Controllers\SalesMarketingController::class, 'updateClientStatus'])->name('client-database.status');
     Route::patch('/client-database/{id}/downpayment-status', [App\Http\Controllers\SalesMarketingController::class, 'updateDownpaymentStatus'])->name('client-database.downpayment-status');
     Route::patch('/client-database/{id}/downpayment-installment', [App\Http\Controllers\SalesMarketingController::class, 'updateDownpaymentInstallment'])->name('client-database.downpayment-installment');
+    Route::get('/api/client-database/{id}/installments', [App\Http\Controllers\SalesMarketingController::class, 'getInstallments']);
+    Route::post('/api/client-database/{id}/installments/setup', [App\Http\Controllers\SalesMarketingController::class, 'setupInstallments']);
+    Route::patch('/api/installments/{id}/amount', [App\Http\Controllers\SalesMarketingController::class, 'updateInstallmentAmount']);
+    Route::patch('/api/installments/{id}/paid', [App\Http\Controllers\SalesMarketingController::class, 'markInstallmentPaid']);
     Route::delete('/client-database/{id}', [App\Http\Controllers\SalesMarketingController::class, 'destroy'])->name('client-database.destroy');
 
     // Site Visit Database

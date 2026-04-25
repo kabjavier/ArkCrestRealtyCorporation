@@ -635,83 +635,91 @@ function cdFilter() {
 </script>
 <!-- Downpayment Installment Modal -->
 <div id="dpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:white;border-radius:16px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden">
-        <div style="background:linear-gradient(135deg,#1e4575,#2563eb);color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
-            <h3 style="margin:0;font-size:18px;font-weight:700">Downpayment Installment</h3>
+    <div style="background:white;border-radius:16px;width:90%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
+        <div style="background:linear-gradient(135deg,#1e4575,#2563eb);color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+            <h3 style="margin:0;font-size:18px;font-weight:700">Downpayment Installments</h3>
             <button onclick="document.getElementById('dpModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">✕</button>
         </div>
-        <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
-            <div>
-                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Downpayment Amount</label>
-                <input type="number" id="dp_amount" step="0.01" min="0" placeholder="0.00"
-                    oninput="computeDPInstallment()"
-                    style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
-            </div>
-            <div>
-                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Number of Terms (max 6)</label>
-                <select id="dp_terms" onchange="computeDPInstallment()" style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
-                    @for($i = 1; $i <= 6; $i++)
-                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'term' : 'terms' }}</option>
-                    @endfor
-                </select>
-            </div>
-            <div style="background:#f0f4ff;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
-                <span style="font-size:13px;font-weight:600;color:#374151">Per Term Amount:</span>
-                <span id="dp_per_term_display" style="font-size:18px;font-weight:800;color:#1e4575">₱0.00</span>
-            </div>
-            <div>
-                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Status</label>
-                <select id="dp_status" style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
-                    <option value="">— Set Status —</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Partial">Partial</option>
-                    <option value="Unpaid">Unpaid</option>
-                </select>
-            </div>
+        <div style="padding:20px 24px;flex-shrink:0;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;gap:12px">
+            <label style="font-size:13px;font-weight:600;color:#374151;white-space:nowrap">Number of Terms:</label>
+            <select id="dp_terms_select" onchange="setupInstallments()" style="padding:8px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
+                @for($i = 1; $i <= 6; $i++)
+                <option value="{{ $i }}">{{ $i }}</option>
+                @endfor
+            </select>
         </div>
-        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:12px">
-            <button onclick="document.getElementById('dpModal').style.display='none'" style="padding:10px 20px;background:#f3f4f6;color:#374151;border:2px solid #d0d5dd;border-radius:8px;font-weight:600;cursor:pointer">Cancel</button>
-            <button onclick="saveDPInstallment()" style="padding:10px 24px;background:#1e4575;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Save</button>
+        <div id="dp_installments_list" style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px">
+            <div style="text-align:center;color:#94a3b8;padding:20px;">Loading...</div>
+        </div>
+        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;flex-shrink:0">
+            <button onclick="document.getElementById('dpModal').style.display='none'" style="width:100%;padding:10px;background:#f3f4f6;color:#374151;border:2px solid #d0d5dd;border-radius:8px;font-weight:600;cursor:pointer">Close</button>
         </div>
     </div>
 </div>
 
 <script>
 let _dpRecordId = null;
+const _dpCsrf = document.querySelector('meta[name=csrf-token]')?.content || '';
+
 function openDPModal(id, amount, terms, perTerm, status) {
     _dpRecordId = id;
-    document.getElementById('dp_amount').value = amount || '';
-    document.getElementById('dp_terms').value = terms || 1;
-    document.getElementById('dp_status').value = status || '';
-    computeDPInstallment();
+    document.getElementById('dp_terms_select').value = terms || 1;
     document.getElementById('dpModal').style.display = 'flex';
+    loadInstallments();
 }
-function computeDPInstallment() {
-    const amount = parseFloat(document.getElementById('dp_amount').value) || 0;
-    const terms  = parseInt(document.getElementById('dp_terms').value) || 1;
-    const per    = terms > 0 ? amount / terms : 0;
-    document.getElementById('dp_per_term_display').textContent = '₱' + per.toLocaleString('en-US', {minimumFractionDigits:2});
-}
-function saveDPInstallment() {
-    const amount = document.getElementById('dp_amount').value;
-    const terms  = document.getElementById('dp_terms').value;
-    const status = document.getElementById('dp_status').value;
-    const csrf   = document.querySelector('meta[name=csrf-token]')?.content || '';
 
-    // Save installment
-    fetch(`/client-database/${_dpRecordId}/downpayment-installment`, {
+function loadInstallments() {
+    fetch(`/api/client-database/${_dpRecordId}/installments`)
+        .then(r => r.json())
+        .then(data => renderInstallments(data));
+}
+
+function setupInstallments() {
+    const terms = document.getElementById('dp_terms_select').value;
+    fetch(`/api/client-database/${_dpRecordId}/installments/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
+        body: JSON.stringify({ terms })
+    }).then(r => r.json()).then(data => renderInstallments(data));
+}
+
+function renderInstallments(list) {
+    const container = document.getElementById('dp_installments_list');
+    if (!list.length) {
+        container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;">No installments yet. Set number of terms above.</div>';
+        return;
+    }
+    container.innerHTML = list.map(inst => `
+        <div id="inst_row_${inst.id}" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${inst.is_paid ? '#f0fdf4' : '#f8fafc'};border-radius:10px;border:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};">
+            <span style="font-size:13px;font-weight:700;color:#1e4575;min-width:60px;">Term ${inst.term_number}</span>
+            <input type="number" id="inst_amount_${inst.id}" value="${inst.amount || ''}" placeholder="0.00" step="0.01" min="0"
+                ${inst.is_paid ? 'disabled' : ''}
+                onblur="saveInstallmentAmount(${inst.id})"
+                style="flex:1;padding:8px 10px;border:1.5px solid #d0d5dd;border-radius:7px;font-size:13px;${inst.is_paid ? 'background:#f0fdf4;color:#166534;' : ''}">
+            ${inst.is_paid
+                ? `<span style="padding:5px 12px;background:#dcfce7;color:#166534;border-radius:20px;font-size:12px;font-weight:700;">✓ Paid</span>`
+                : `<button onclick="markPaid(${inst.id})" style="padding:6px 14px;background:#1e4575;color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Mark Paid</button>`
+            }
+        </div>
+    `).join('');
+}
+
+function saveInstallmentAmount(instId) {
+    const amount = document.getElementById(`inst_amount_${instId}`).value;
+    fetch(`/api/installments/${instId}/amount`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
-        body: JSON.stringify({ downpayment_amount: amount, downpayment_terms: terms })
-    }).then(() => {
-        // Save status
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/client-database/${_dpRecordId}/downpayment-status`;
-        form.innerHTML = `<input name="_token" value="${csrf}"><input name="_method" value="PATCH"><input name="downpayment_status" value="${status}">`;
-        document.body.appendChild(form);
-        form.submit();
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
+        body: JSON.stringify({ amount })
     });
+}
+
+function markPaid(instId) {
+    if (!confirm('Mark this installment as paid? This cannot be undone.')) return;
+    fetch(`/api/installments/${instId}/paid`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
+        body: JSON.stringify({})
+    }).then(r => r.json()).then(() => loadInstallments());
 }
 </script>
 

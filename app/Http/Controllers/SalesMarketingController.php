@@ -340,6 +340,67 @@ class SalesMarketingController extends Controller
         return back()->with('success', 'Status updated.');
     }
 
+    public function getInstallments($id)
+    {
+        $installments = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)
+            ->orderBy('term_number')->get();
+        return response()->json($installments);
+    }
+
+    public function setupInstallments(Request $request, $id)
+    {
+        $terms = (int) $request->terms;
+        if ($terms < 1 || $terms > 6) return response()->json(['error' => 'Invalid terms'], 422);
+
+        // Delete existing unpaid installments only
+        \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)
+            ->where('is_paid', false)->delete();
+
+        // Create new installments
+        $existing = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)
+            ->pluck('term_number')->toArray();
+
+        for ($i = 1; $i <= $terms; $i++) {
+            if (!in_array($i, $existing)) {
+                \App\Models\DownpaymentInstallment::create([
+                    'commission_request_sales_id' => $id,
+                    'term_number' => $i,
+                    'amount' => null,
+                    'is_paid' => false,
+                ]);
+            }
+        }
+
+        // Update terms count on parent record
+        CommissionRequestSales::findOrFail($id)->update(['downpayment_terms' => $terms]);
+
+        return response()->json(\App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)
+            ->orderBy('term_number')->get());
+    }
+
+    public function updateInstallmentAmount(Request $request, $id)
+    {
+        $inst = \App\Models\DownpaymentInstallment::findOrFail($id);
+        if ($inst->is_paid) return response()->json(['error' => 'Already paid'], 422);
+        $inst->update(['amount' => $request->amount]);
+        return response()->json(['success' => true]);
+    }
+
+    public function markInstallmentPaid(Request $request, $id)
+    {
+        $inst = \App\Models\DownpaymentInstallment::findOrFail($id);
+        $inst->update(['is_paid' => true, 'paid_at' => now()]);
+
+        // Update parent downpayment_status
+        $parentId = $inst->commission_request_sales_id;
+        $all   = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $parentId)->count();
+        $paid  = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $parentId)->where('is_paid', true)->count();
+        $status = $paid === $all ? 'Paid' : 'Partial';
+        CommissionRequestSales::findOrFail($parentId)->update(['downpayment_status' => $status]);
+
+        return response()->json(['success' => true, 'status' => $status]);
+    }
+
     public function updateDownpaymentInstallment(Request $request, $id)
     {
         $record = CommissionRequestSales::findOrFail($id);
