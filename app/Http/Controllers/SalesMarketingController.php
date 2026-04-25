@@ -340,6 +340,20 @@ class SalesMarketingController extends Controller
         return back()->with('success', 'Status updated.');
     }
 
+    public function updateDownpaymentInstallment(Request $request, $id)
+    {
+        $record = CommissionRequestSales::findOrFail($id);
+        $amount = (float) $request->downpayment_amount;
+        $terms  = (int) $request->downpayment_terms;
+        $perTerm = $terms > 0 ? round($amount / $terms, 2) : 0;
+        $record->update([
+            'downpayment_amount'   => $amount,
+            'downpayment_terms'    => $terms,
+            'downpayment_per_term' => $perTerm,
+        ]);
+        return response()->json(['success' => true, 'per_term' => $perTerm]);
+    }
+
     public function updateDownpaymentStatus(Request $request, $id)
     {
         $record = CommissionRequestSales::findOrFail($id);

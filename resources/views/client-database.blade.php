@@ -214,18 +214,12 @@
                             </form>
                         </td>
                         <td style="padding:10px 12px;white-space:nowrap">
-                            <form method="POST" action="{{ route('client-database.downpayment-status', $req->id) }}">
-                                @csrf @method('PATCH')
-                                <select name="downpayment_status" onchange="this.form.submit()"
-                                    style="padding:5px 10px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;outline:none;
-                                    background:{{ $req->downpayment_status === 'Paid' ? '#dcfce7' : ($req->downpayment_status === 'Unpaid' ? '#fee2e2' : ($req->downpayment_status === 'Partial' ? '#fef3c7' : '#f1f5f9')) }};
-                                    color:{{ $req->downpayment_status === 'Paid' ? '#166534' : ($req->downpayment_status === 'Unpaid' ? '#991b1b' : ($req->downpayment_status === 'Partial' ? '#92400e' : '#64748b')) }};">
-                                    <option value="" {{ !$req->downpayment_status ? 'selected' : '' }}>— Set Status —</option>
-                                    <option value="Paid" {{ $req->downpayment_status === 'Paid' ? 'selected' : '' }} style="background:#dcfce7;color:#166534;">Paid</option>
-                                    <option value="Partial" {{ $req->downpayment_status === 'Partial' ? 'selected' : '' }} style="background:#fef3c7;color:#92400e;">Partial</option>
-                                    <option value="Unpaid" {{ $req->downpayment_status === 'Unpaid' ? 'selected' : '' }} style="background:#fee2e2;color:#991b1b;">Unpaid</option>
-                                </select>
-                            </form>
+                            <button onclick="openDPModal({{ $req->id }}, {{ $req->downpayment_amount ?? 0 }}, {{ $req->downpayment_terms ?? 1 }}, {{ $req->downpayment_per_term ?? 0 }}, '{{ $req->downpayment_status ?? '' }}')"
+                                style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;
+                                background:{{ $req->downpayment_status === 'Paid' ? '#dcfce7' : ($req->downpayment_status === 'Unpaid' ? '#fee2e2' : ($req->downpayment_status === 'Partial' ? '#fef3c7' : '#f1f5f9')) }};
+                                color:{{ $req->downpayment_status === 'Paid' ? '#166534' : ($req->downpayment_status === 'Unpaid' ? '#991b1b' : ($req->downpayment_status === 'Partial' ? '#92400e' : '#64748b')) }};">
+                                {{ $req->downpayment_status ?: '— Set —' }}
+                            </button>
                         </td>
                         <td style="padding:10px 12px;white-space:nowrap">
                             <form method="POST" action="{{ route('client-database.status', $req->id) }}">
@@ -653,4 +647,86 @@ function cdFilter() {
     });
 })();
 </script>
+<!-- Downpayment Installment Modal -->
+<div id="dpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:white;border-radius:16px;width:90%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden">
+        <div style="background:linear-gradient(135deg,#1e4575,#2563eb);color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+            <h3 style="margin:0;font-size:18px;font-weight:700">Downpayment Installment</h3>
+            <button onclick="document.getElementById('dpModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">✕</button>
+        </div>
+        <div style="padding:24px;display:flex;flex-direction:column;gap:16px">
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Downpayment Amount</label>
+                <input type="number" id="dp_amount" step="0.01" min="0" placeholder="0.00"
+                    oninput="computeDPInstallment()"
+                    style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
+            </div>
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Number of Terms (max 6)</label>
+                <select id="dp_terms" onchange="computeDPInstallment()" style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
+                    @for($i = 1; $i <= 6; $i++)
+                    <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'term' : 'terms' }}</option>
+                    @endfor
+                </select>
+            </div>
+            <div style="background:#f0f4ff;border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;font-weight:600;color:#374151">Per Term Amount:</span>
+                <span id="dp_per_term_display" style="font-size:18px;font-weight:800;color:#1e4575">₱0.00</span>
+            </div>
+            <div>
+                <label style="font-size:12px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Status</label>
+                <select id="dp_status" style="width:100%;padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
+                    <option value="">— Set Status —</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Unpaid">Unpaid</option>
+                </select>
+            </div>
+        </div>
+        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:12px">
+            <button onclick="document.getElementById('dpModal').style.display='none'" style="padding:10px 20px;background:#f3f4f6;color:#374151;border:2px solid #d0d5dd;border-radius:8px;font-weight:600;cursor:pointer">Cancel</button>
+            <button onclick="saveDPInstallment()" style="padding:10px 24px;background:#1e4575;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Save</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let _dpRecordId = null;
+function openDPModal(id, amount, terms, perTerm, status) {
+    _dpRecordId = id;
+    document.getElementById('dp_amount').value = amount || '';
+    document.getElementById('dp_terms').value = terms || 1;
+    document.getElementById('dp_status').value = status || '';
+    computeDPInstallment();
+    document.getElementById('dpModal').style.display = 'flex';
+}
+function computeDPInstallment() {
+    const amount = parseFloat(document.getElementById('dp_amount').value) || 0;
+    const terms  = parseInt(document.getElementById('dp_terms').value) || 1;
+    const per    = terms > 0 ? amount / terms : 0;
+    document.getElementById('dp_per_term_display').textContent = '₱' + per.toLocaleString('en-US', {minimumFractionDigits:2});
+}
+function saveDPInstallment() {
+    const amount = document.getElementById('dp_amount').value;
+    const terms  = document.getElementById('dp_terms').value;
+    const status = document.getElementById('dp_status').value;
+    const csrf   = document.querySelector('meta[name=csrf-token]')?.content || '';
+
+    // Save installment
+    fetch(`/client-database/${_dpRecordId}/downpayment-installment`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+        body: JSON.stringify({ downpayment_amount: amount, downpayment_terms: terms })
+    }).then(() => {
+        // Save status
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/client-database/${_dpRecordId}/downpayment-status`;
+        form.innerHTML = `<input name="_token" value="${csrf}"><input name="_method" value="PATCH"><input name="downpayment_status" value="${status}">`;
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+</script>
+
 @endsection

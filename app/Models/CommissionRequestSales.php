@@ -33,6 +33,9 @@ class CommissionRequestSales extends Model
         'status',
         'client_status',
         'downpayment_status',
+        'downpayment_amount',
+        'downpayment_terms',
+        'downpayment_per_term',
     ];
 
     protected $casts = [
