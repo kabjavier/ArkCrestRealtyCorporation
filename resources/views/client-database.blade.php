@@ -216,8 +216,8 @@
                         <td style="padding:10px 12px;white-space:nowrap">
                             <button onclick="openDPModal({{ $req->id }}, {{ $req->downpayment_amount ?? 0 }}, {{ $req->downpayment_terms ?? 1 }}, {{ $req->downpayment_per_term ?? 0 }}, '{{ $req->downpayment_status ?? '' }}')"
                                 style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:none;cursor:pointer;
-                                background:{{ $req->downpayment_status === 'Paid' ? '#dcfce7' : ($req->downpayment_status === 'Unpaid' ? '#fee2e2' : ($req->downpayment_status === 'Partial' ? '#fef3c7' : '#f1f5f9')) }};
-                                color:{{ $req->downpayment_status === 'Paid' ? '#166534' : ($req->downpayment_status === 'Unpaid' ? '#991b1b' : ($req->downpayment_status === 'Partial' ? '#92400e' : '#64748b')) }};">
+                                background:{{ $req->downpayment_status === 'Paid' || $req->downpayment_status === 'Spot Paid' ? '#dcfce7' : ($req->downpayment_status && $req->downpayment_status !== '— Set —' ? '#fef3c7' : '#f1f5f9') }};
+                                color:{{ $req->downpayment_status === 'Paid' || $req->downpayment_status === 'Spot Paid' ? '#166534' : ($req->downpayment_status && $req->downpayment_status !== '— Set —' ? '#92400e' : '#64748b') }};">
                                 {{ $req->downpayment_status ?: '— Set —' }}
                             </button>
                         </td>
@@ -637,28 +637,56 @@ function cdFilter() {
 <div id="dpModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center" onclick="if(event.target===this)this.style.display='none'">
     <div style="background:white;border-radius:16px;width:90%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;max-height:90vh;display:flex;flex-direction:column;">
         <div style="background:linear-gradient(135deg,#1e4575,#2563eb);color:white;padding:20px 24px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-            <h3 style="margin:0;font-size:18px;font-weight:700">Downpayment Installments</h3>
+            <h3 style="margin:0;font-size:18px;font-weight:700">Downpayment</h3>
             <button onclick="document.getElementById('dpModal').style.display='none'" style="background:rgba(255,255,255,0.2);border:none;color:white;width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:18px">✕</button>
         </div>
-        <div style="padding:20px 24px;flex-shrink:0;border-bottom:1px solid #e5e7eb;display:flex;gap:16px;align-items:flex-end">
-            <div style="flex:1">
-                <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Total Downpayment Amount</label>
-                <input type="number" id="dp_total_amount" step="0.01" min="0" placeholder="0.00"
-                    style="width:100%;padding:9px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
+
+        {{-- Step 1: Choose type --}}
+        <div id="dp_step_type" style="padding:24px;display:flex;flex-direction:column;gap:12px;flex-shrink:0">
+            <p style="font-size:13px;color:#64748b;margin:0;">Select downpayment type:</p>
+            <div style="display:flex;gap:12px">
+                <button onclick="selectDPType('spot')" style="flex:1;padding:14px;border:2px solid #e2e8f0;border-radius:10px;background:white;cursor:pointer;font-size:14px;font-weight:600;color:#374151;transition:all .2s" onmouseover="this.style.borderColor='#1e4575'" onmouseout="this.style.borderColor='#e2e8f0'">
+                    💰 Spot Downpayment
+                </button>
+                <button onclick="selectDPType('installment')" style="flex:1;padding:14px;border:2px solid #e2e8f0;border-radius:10px;background:white;cursor:pointer;font-size:14px;font-weight:600;color:#374151;transition:all .2s" onmouseover="this.style.borderColor='#1e4575'" onmouseout="this.style.borderColor='#e2e8f0'">
+                    📅 Installment Downpayment
+                </button>
             </div>
+        </div>
+
+        {{-- Spot DP --}}
+        <div id="dp_spot_section" style="display:none;padding:0 24px 24px;flex-direction:column;gap:12px">
             <div>
-                <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Terms</label>
-                <select id="dp_terms_select" style="padding:9px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
-                    @for($i = 1; $i <= 6; $i++)
-                    <option value="{{ $i }}">{{ $i }}</option>
-                    @endfor
-                </select>
+                <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Amount</label>
+                <input type="number" id="dp_spot_amount" step="0.01" min="0" placeholder="0.00"
+                    style="width:100%;padding:10px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
             </div>
-            <button onclick="setupInstallments()" style="padding:9px 16px;background:#1e4575;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Set Terms</button>
+            <button onclick="saveSpotDP()" style="padding:11px;background:#059669;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Mark as Paid (Spot)</button>
         </div>
-        <div id="dp_installments_list" style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;min-height:80px">
-            <div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">Set the amount and terms above, then click "Set Terms".</div>
+
+        {{-- Installment DP --}}
+        <div id="dp_installment_section" style="display:none;flex-direction:column;flex:1;min-height:0">
+            <div style="padding:16px 24px;border-bottom:1px solid #e5e7eb;display:flex;gap:12px;align-items:flex-end;flex-shrink:0">
+                <div style="flex:1">
+                    <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Total Amount</label>
+                    <input type="number" id="dp_total_amount" step="0.01" min="0" placeholder="0.00"
+                        style="width:100%;padding:9px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
+                </div>
+                <div>
+                    <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Terms</label>
+                    <select id="dp_terms_select" style="padding:9px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px">
+                        @for($i = 1; $i <= 6; $i++)
+                        <option value="{{ $i }}">{{ $i }}</option>
+                        @endfor
+                    </select>
+                </div>
+                <button onclick="setupInstallments()" style="padding:9px 16px;background:#1e4575;color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">Set Terms</button>
+            </div>
+            <div id="dp_installments_list" style="padding:16px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:10px;min-height:60px">
+                <div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">Set amount and terms, then click "Set Terms".</div>
+            </div>
         </div>
+
         <div style="padding:16px 24px;border-top:1px solid #e5e7eb;flex-shrink:0">
             <button onclick="document.getElementById('dpModal').style.display='none'" style="width:100%;padding:10px;background:#f3f4f6;color:#374151;border:2px solid #d0d5dd;border-radius:8px;font-weight:600;cursor:pointer">Close</button>
         </div>
@@ -673,14 +701,53 @@ function openDPModal(id, amount, terms, perTerm, status) {
     _dpRecordId = id;
     document.getElementById('dp_total_amount').value = amount || '';
     document.getElementById('dp_terms_select').value = terms || 1;
+    document.getElementById('dp_spot_amount').value = amount || '';
+
+    // Show type selection first, unless already set
+    document.getElementById('dp_step_type').style.display = 'flex';
+    document.getElementById('dp_spot_section').style.display = 'none';
+    document.getElementById('dp_installment_section').style.display = 'none';
+
+    // If already has installments, go straight to installment view
+    if (terms > 1 || (status && status.includes('month'))) {
+        selectDPType('installment');
+        loadInstallments();
+    } else if (status === 'Spot Paid') {
+        selectDPType('spot');
+    }
+
     document.getElementById('dpModal').style.display = 'flex';
-    loadInstallments();
+}
+
+function selectDPType(type) {
+    document.getElementById('dp_step_type').style.display = 'none';
+    if (type === 'spot') {
+        document.getElementById('dp_spot_section').style.display = 'flex';
+        document.getElementById('dp_installment_section').style.display = 'none';
+    } else {
+        document.getElementById('dp_spot_section').style.display = 'none';
+        document.getElementById('dp_installment_section').style.display = 'flex';
+        loadInstallments();
+    }
+}
+
+function saveSpotDP() {
+    const amount = document.getElementById('dp_spot_amount').value;
+    fetch(`/client-database/${_dpRecordId}/downpayment-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
+        body: JSON.stringify({ _method: 'PATCH', downpayment_status: 'Spot Paid', downpayment_amount: amount })
+    }).then(() => {
+        const form = document.createElement('form');
+        form.method = 'POST'; form.action = `/client-database/${_dpRecordId}/downpayment-status`;
+        form.innerHTML = `<input name="_token" value="${_dpCsrf}"><input name="_method" value="PATCH"><input name="downpayment_status" value="Spot Paid"><input name="downpayment_amount" value="${amount}">`;
+        document.body.appendChild(form); form.submit();
+    });
 }
 
 function loadInstallments() {
     fetch(`/api/client-database/${_dpRecordId}/installments`)
-        .then(r => r.json())
-        .then(data => renderInstallments(data));
+        .then(r => r.json()).then(data => renderInstallments(data));
 }
 
 function setupInstallments() {
@@ -696,7 +763,7 @@ function setupInstallments() {
 function renderInstallments(list) {
     const container = document.getElementById('dp_installments_list');
     if (!list.length) {
-        container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">Set the amount and terms above, then click "Set Terms".</div>';
+        container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">Set amount and terms, then click "Set Terms".</div>';
         return;
     }
     container.innerHTML = list.map(inst => `
@@ -729,13 +796,7 @@ function markPaid(instId) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
         body: JSON.stringify({})
-    }).then(r => r.json()).then(data => {
-        loadInstallments();
-        // Update button label in table
-        if (data.status) {
-            const btn = document.querySelector(`button[onclick="openDPModal(${_dpRecordId}"]`);
-        }
-    });
+    }).then(r => r.json()).then(() => loadInstallments());
 }
 </script>
 
