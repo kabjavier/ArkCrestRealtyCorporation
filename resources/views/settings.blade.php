@@ -1657,11 +1657,13 @@
                 <td>{{ $u->employee_id ?: '—' }}</td>
                 <td>{{ $u->date_hired ? $u->date_hired->format('M d, Y') : '—' }}</td>
                 <td style="white-space:nowrap;">
+                  @if($isAdmin || $canSeeS('settings.employee'))
                   <button type="button" class="st-btn st-btn-primary st-btn-sm" onclick="toggleEmpEdit({{ $u->id }})">Edit</button>
                   @if($u->id !== auth()->id())
                   <form method="POST" action="{{ route('settings.users.remove', $u->id) }}" style="display:inline;" onsubmit="return confirm('Remove {{ addslashes($u->name) }}?')">@csrf @method('DELETE')
                     <button type="submit" class="st-btn st-btn-danger st-btn-sm">Delete</button>
                   </form>
+                  @endif
                   @endif
                 </td>
               </tr>
@@ -1731,10 +1733,12 @@
               <td style="padding:11px 16px;font-size:13px;">@if($contact->email)<a href="mailto:{{ $contact->email }}" style="color:#1e4575;text-decoration:none;">{{ $contact->email }}</a>@else —@endif</td>
               <td style="padding:11px 16px;font-size:13px;color:#1877f2;">{{ $contact->facebook ?: '—' }}</td>
               <td style="padding:11px 16px;white-space:nowrap;">
+                @if($isAdmin || $canSeeS('settings.personnel'))
                 <button type="button" class="st-btn st-btn-primary st-btn-sm" onclick="openContactModal({{ $contact->id }}, '{{ addslashes($contact->name) }}', '{{ addslashes($contact->company) }}', '{{ addslashes($contact->phone) }}', '{{ addslashes($contact->email) }}', '{{ addslashes($contact->facebook) }}', this)">Edit</button>
                 <form method="POST" action="{{ route('settings.personnel-contacts.destroy', $contact->id) }}" style="display:inline;" onsubmit="return confirm('Remove this contact?')">@csrf @method('DELETE')
                   <button type="submit" class="st-btn st-btn-danger st-btn-sm">Delete</button>
                 </form>
+                @endif
               </td>
             </tr>
             @endforeach
