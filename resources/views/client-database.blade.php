@@ -658,10 +658,12 @@ function cdFilter() {
         <div id="dp_spot_section" style="display:none;padding:0 24px 24px;flex-direction:column;gap:12px">
             <div>
                 <label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Amount</label>
-                <input type="number" id="dp_spot_amount" step="0.01" min="0" placeholder="0.00"
-                    style="width:100%;padding:10px 12px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px;box-sizing:border-box">
+                <div style="display:flex;align-items:center;border:2px solid #d0d5dd;border-radius:8px;overflow:hidden;background:white;">
+                    <input type="number" id="dp_spot_amount" step="0.01" min="0" placeholder="Enter amount here"
+                        style="flex:1;padding:10px 12px;border:none;outline:none;font-size:14px;background:transparent;">
+                    <button onclick="saveSpotDP()" style="padding:10px 16px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>
+                </div>
             </div>
-            <button onclick="saveSpotDP()" style="padding:11px;background:linear-gradient(135deg,#1e4575,#2563eb);color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer">Mark as Paid (Spot)</button>
         </div>
 
         {{-- Installment DP --}}
@@ -784,15 +786,15 @@ function renderInstallments(list) {
         return;
     }
     container.innerHTML = list.map(inst => `
-        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${inst.is_paid ? '#f0fdf4' : '#f8fafc'};border-radius:10px;border:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};">
-            <span style="font-size:13px;font-weight:700;color:#1e4575;min-width:60px;">Term ${inst.term_number}</span>
-            <input type="number" id="inst_amount_${inst.id}" value="${inst.amount || ''}" placeholder="0.00" step="0.01" min="0"
+        <div style="display:flex;align-items:center;gap:0;border:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};border-radius:10px;overflow:hidden;background:${inst.is_paid ? '#f0fdf4' : '#f8fafc'};">
+            <span style="font-size:13px;font-weight:700;color:#1e4575;padding:10px 14px;white-space:nowrap;border-right:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};">Term ${inst.term_number}</span>
+            <input type="number" id="inst_amount_${inst.id}" value="${inst.amount || ''}" placeholder="Enter amount here" step="0.01" min="0"
                 ${inst.is_paid ? 'disabled' : ''}
                 onblur="saveInstallmentAmount(${inst.id})"
-                style="flex:1;padding:8px 10px;border:1.5px solid #d0d5dd;border-radius:7px;font-size:13px;${inst.is_paid ? 'background:#f0fdf4;color:#166534;' : ''}">
+                style="flex:1;padding:10px 12px;border:none;outline:none;font-size:13px;background:transparent;${inst.is_paid ? 'color:#166534;' : ''}">
             ${inst.is_paid
-                ? `<span style="padding:5px 12px;background:#dcfce7;color:#166534;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">✓ Paid</span>`
-                : `<button onclick="markPaid(${inst.id})" style="padding:6px 14px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>`
+                ? `<span style="padding:10px 14px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;white-space:nowrap;border-left:1.5px solid #bbf7d0;">✓ Paid</span>`
+                : `<button onclick="markPaid(${inst.id})" style="padding:10px 16px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>`
             }
         </div>
     `).join('');
