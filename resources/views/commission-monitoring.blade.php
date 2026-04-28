@@ -112,8 +112,8 @@
                         <input type="number" id="cm_add_lot_area" name="lot_area" placeholder="0.0000" step="0.0001" min="0" oninput="computeAddTCP()">
                     </div>
                     <div class="form-group">
-                        <label>DISCOUNT</label>
-                        <input type="number" id="cm_add_discount" name="discount" placeholder="0.00" step="0.01" min="0" oninput="computeAddNetTCP()">
+                        <label>DISCOUNT (%)</label>
+                        <input type="number" id="cm_add_discount" name="discount" placeholder="0.00" step="0.01" min="0" max="100" oninput="computeAddNetTCP()">
                     </div>
                     <div class="form-group">
                         <label>NET TCP <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
@@ -1229,9 +1229,8 @@ function computeAddTCP() {
     const priceSqm = parseFloat(document.getElementById('cm_add_price_sqm').value) || 0;
     const lotArea  = parseFloat(document.getElementById('cm_add_lot_area').value) || 0;
     const tcp      = priceSqm * lotArea;
-    // Auto-fill net tcp if no discount
-    const discount = parseFloat(document.getElementById('cm_add_discount').value) || 0;
-    const netTcp   = tcp - discount;
+    const discPct  = parseFloat(document.getElementById('cm_add_discount').value) || 0;
+    const netTcp   = tcp - (tcp * discPct / 100);
     document.getElementById('cm_add_net_tcp').value = netTcp > 0 ? netTcp.toFixed(2) : '';
     computeAddCommission();
 }
@@ -1239,8 +1238,8 @@ function computeAddNetTCP() {
     const priceSqm = parseFloat(document.getElementById('cm_add_price_sqm').value) || 0;
     const lotArea  = parseFloat(document.getElementById('cm_add_lot_area').value) || 0;
     const tcp      = priceSqm * lotArea;
-    const discount = parseFloat(document.getElementById('cm_add_discount').value) || 0;
-    const netTcp   = tcp - discount;
+    const discPct  = parseFloat(document.getElementById('cm_add_discount').value) || 0;
+    const netTcp   = tcp - (tcp * discPct / 100);
     document.getElementById('cm_add_net_tcp').value = netTcp > 0 ? netTcp.toFixed(2) : '';
     computeAddCommission();
 }
