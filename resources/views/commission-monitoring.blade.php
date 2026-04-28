@@ -131,7 +131,7 @@
                         <input type="text" id="cm_add_commission_display" placeholder="0.00" oninput="computeAddCommissionFromValue()" style="color:#374151;">
                     </div>
                     <div class="form-group">
-                        <label>PAYMENT TYPE</label>
+                        <label>COMMISSION TERMS</label>
                         <select id="cm_add_payment_type" name="payment_type" onchange="computeValueOfPaymentTerms()">
                             <option value="">— Select —</option>
                             <option value="Full Payment">Full Payment</option>
@@ -139,22 +139,9 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>VALUE OF PAYMENT TERMS <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
+                        <label>VALUE OF COMMISSION TERMS <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
                         <input type="text" id="cm_add_vopt_display" placeholder="0.00" readonly style="background:#f3f4f6;cursor:not-allowed;color:#374151;">
                         <input type="hidden" id="cm_add_value_of_payment_terms" name="value_of_payment_terms">
-                    </div>
-                    <div class="form-group">
-                        <label>PAYMENT TYPE</label>
-                        <select id="cm_add_payment_type" name="payment_type" onchange="computeValueOfPaymentTerms()">
-                            <option value="">— Select —</option>
-                            <option value="Full Payment">Full Payment</option>
-                            <option value="Partial Payment">Partial Payment</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>VALUE OF PAYMENT TERMS <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
-                        <input type="text" id="cm_add_vopt_display" placeholder="0.00" readonly style="background:#f3f4f6;cursor:not-allowed;color:#374151;">
-                        <input type="hidden" id="cm_add_vopt" name="value_of_payment_terms">
                     </div>
                     <div class="form-group">
                         <label>TERMS OF PAYMENT <span class="required">*</span></label>
@@ -308,8 +295,8 @@
                         <th>Commission</th>
                         @endif
                         <th>Date Released</th>
-                        <th>Payment Type</th>
-                        <th>Value of Payment Terms</th>
+                        <th>Commission Terms</th>
+                        <th>Value of Commission Terms</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -1283,19 +1270,8 @@ function computeAddNetTCP() {
 function computeValueOfPaymentTerms() {
     const netTcp   = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
     const type     = document.getElementById('cm_add_payment_type')?.value || '';
-    const base     = netTcp * 0.08;
-    let value      = 0;
-    if (type === 'Full Payment')    value = base;
-    else if (type === 'Partial Payment') value = base / 3;
-    document.getElementById('cm_add_vopt').value        = value > 0 ? value.toFixed(2) : '';
-    document.getElementById('cm_add_vopt_display').value = value > 0 ? fmtComma(value) : '';
-}
-
-function computeValueOfPaymentTerms() {
-    const netTcp   = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
-    const commPct  = 8; // fixed 8%
+    const commPct  = parseFloat(document.getElementById('cm_add_commission_percent')?.value) || 0;
     const commVal  = netTcp * (commPct / 100);
-    const type     = document.getElementById('cm_add_payment_type').value;
     let result     = 0;
     if (type === 'Full Payment')    result = commVal;
     if (type === 'Partial Payment') result = commVal / 3;
