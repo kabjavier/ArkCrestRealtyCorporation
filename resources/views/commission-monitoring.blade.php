@@ -128,7 +128,7 @@
                     @endif
                     <div class="form-group">
                         <label>VALUE OF COMMISSION <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
-                        <input type="number" id="cm_add_commission_display" placeholder="0.00" step="0.01" min="0" oninput="computeAddCommissionFromValue()">
+                        <input type="text" id="cm_add_commission_display" placeholder="0.00" oninput="computeAddCommissionFromValue()" style="color:#374151;">
                     </div>
                     <div class="form-group">
                         <label>TERMS OF PAYMENT <span class="required">*</span></label>
@@ -1255,7 +1255,16 @@ function computeAddCommission() {
     const result = netTcp * (pct / 100);
     document.getElementById('cm_add_commission').value = result > 0 ? result.toFixed(2) : '';
     const display = document.getElementById('cm_add_commission_display');
-    if (display) display.value = result > 0 ? fmtComma(result) : '';
+    if (display) display.value = result > 0 ? fmtComma(result) : '0.00';
+}
+function computeAddCommissionFromValue() {
+    const netTcp = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
+    const rawVal = (document.getElementById('cm_add_commission_display').value || '').replace(/,/g, '');
+    const val    = parseFloat(rawVal) || 0;
+    const pct    = netTcp > 0 ? (val / netTcp) * 100 : 0;
+    document.getElementById('cm_add_commission').value = val > 0 ? val.toFixed(2) : '';
+    const pctEl = document.getElementById('cm_add_commission_percent');
+    if (pctEl) pctEl.value = pct > 0 ? pct.toFixed(4).replace(/\.?0+$/, '') : '';
 }
 function computeAddCommissionFromValue() {
     const netTcp = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
