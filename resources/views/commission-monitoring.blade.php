@@ -105,18 +105,18 @@
                     </div>
                     <div class="form-group">
                         <label>PRICE / SQM</label>
-                        <input type="number" name="price_sqm" placeholder="0.00" step="0.01" min="0">
+                        <input type="number" id="cm_add_price_sqm" name="price_sqm" placeholder="0.00" step="0.01" min="0" oninput="computeAddTCP()">
                     </div>
                     <div class="form-group">
                         <label>LOT AREA</label>
-                        <input type="number" name="lot_area" placeholder="0.0000" step="0.0001" min="0">
+                        <input type="number" id="cm_add_lot_area" name="lot_area" placeholder="0.0000" step="0.0001" min="0" oninput="computeAddTCP()">
                     </div>
                     <div class="form-group">
                         <label>DISCOUNT</label>
-                        <input type="number" name="discount" placeholder="0.00" step="0.01" min="0">
+                        <input type="number" id="cm_add_discount" name="discount" placeholder="0.00" step="0.01" min="0" oninput="computeAddNetTCP()">
                     </div>
                     <div class="form-group">
-                        <label>NET TCP</label>
+                        <label>NET TCP <span style="font-size:11px;color:#9ca3af;font-weight:400">(auto)</span></label>
                         <input type="number" id="cm_add_net_tcp" name="net_tcp" placeholder="0.00" step="0.01" min="0" oninput="computeAddCommission()">
                     </div>
                     @if($isAdmin)
@@ -1225,6 +1225,25 @@ function closeCmModal(id) {
     document.getElementById(id).classList.remove('active');
 }
 
+function computeAddTCP() {
+    const priceSqm = parseFloat(document.getElementById('cm_add_price_sqm').value) || 0;
+    const lotArea  = parseFloat(document.getElementById('cm_add_lot_area').value) || 0;
+    const tcp      = priceSqm * lotArea;
+    // Auto-fill net tcp if no discount
+    const discount = parseFloat(document.getElementById('cm_add_discount').value) || 0;
+    const netTcp   = tcp - discount;
+    document.getElementById('cm_add_net_tcp').value = netTcp > 0 ? netTcp.toFixed(2) : '';
+    computeAddCommission();
+}
+function computeAddNetTCP() {
+    const priceSqm = parseFloat(document.getElementById('cm_add_price_sqm').value) || 0;
+    const lotArea  = parseFloat(document.getElementById('cm_add_lot_area').value) || 0;
+    const tcp      = priceSqm * lotArea;
+    const discount = parseFloat(document.getElementById('cm_add_discount').value) || 0;
+    const netTcp   = tcp - discount;
+    document.getElementById('cm_add_net_tcp').value = netTcp > 0 ? netTcp.toFixed(2) : '';
+    computeAddCommission();
+}
 function computeAddCommission() {
     const netTcp = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
     const pctEl  = document.getElementById('cm_add_commission_percent');
