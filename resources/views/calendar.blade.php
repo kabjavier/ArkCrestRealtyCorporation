@@ -269,15 +269,15 @@ function showEventDetail(id) {
     if (!ev) return;
     const fmt = v => v ? '\u20B1' + parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
     const fmtDate = v => { if(!v) return '—'; try { return new Date(v).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); } catch(e){ return v; } };
-    document.getElementById('calModalTitle').textContent = ev.agent_name || '—';
+    document.getElementById('calModalTitle').textContent = ev.client_name || '—';
     document.getElementById('calEventBody').innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             ${[
+                ['Date Released', fmtDate(ev.date_released), false],
+                ['Agent', ev.agent_name||'—', false],
                 ['Project', ev.project_name||'—', false],
-                ['Client', ev.client_name||'—', false],
                 ['Net TCP', fmt(ev.net_tcp), false],
                 ['Commission', fmt(ev.commission), true],
-                ['Date Released', fmtDate(ev.date_released), false],
                 ['Status', ev.status||'—', false],
             ].map(([lbl,val,highlight]) => `
                 <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #f1f5f9;">
