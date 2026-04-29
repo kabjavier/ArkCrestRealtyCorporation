@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\CommissionRequest;
 use App\Models\CommissionRequestSales;
 use App\Models\TripSchedule;
+use App\Models\SystemNotification;
 use App\Services\AdminEmailNotifier;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
@@ -14,125 +15,144 @@ use Illuminate\Support\Facades\Mail;
 class SendEventReminders extends Command
 {
     protected $signature   = 'events:send-reminders {--trigger=day_before : day_before or same_day}';
-    protected $description = 'Send email reminders for upcoming events';
+    protected $description = 'Send email + in-app reminders for upcoming events';
 
     public function handle(): void
     {
-        $trigger = $this->option('trigger');
-        $isToday = $trigger === 'same_day';
+        $isToday     = $this->option('trigger') === 'same_day';
+        $date        = $isToday ? Carbon::today()->toDateString()   : Carbon::tomorrow()->toDateString();
+        $displayDate = $isToday ? Carbon::today()->format('F j, Y') : Carbon::tomorrow()->format('F j, Y');
+        $when        = $isToday ? 'Today'                           : 'Tomorrow';
 
-        $date        = $isToday ? Carbon::today()->toDateString()    : Carbon::tomorrow()->toDateString();
-        $displayDate = $isToday ? Carbon::today()->format('F j, Y')  : Carbon::tomorrow()->format('F j, Y');
-        $when        = $isToday ? 'Today'                            : 'Tomorrow';
-        $prefix      = $isToday ? 'TODAY'                            : 'on';
-
-        // ── Recipients: admin + users with 'admin sales' position ──────
-        $adminSalesEmails = $this->getAdminAndSalesAdminEmails();
-
-        // ── 1. Commission Releases → admin + admin sales ────────────────
-        $commReleases = collect();
-        CommissionRequestSales::whereDate('date_released', $date)
-            ->where('status', 'Not Yet Released')->get()
-            ->each(fn($c) => $commReleases->push($c));
-        CommissionRequest::whereDate('date_released', $date)
-            ->where('status', 'Not Yet Released')->get()
-            ->each(fn($c) => $commReleases->push($c));
-
-        if ($commReleases->isNotEmpty()) {
-            $rows = $commReleases->map(fn($c) =>
-                "<b>💰 Commission Release {$when}</b><br>" .
-                ($c->client_name ?? '—') . " — " . ($c->project_name ?? '—') .
-                " | Agent: " . ($c->agent_name ?? '—') .
-                " | ₱" . number_format($c->commission ?? 0, 2) . "<br><br>"
-            )->implode('');
-
-            $this->sendToRecipients(
-                $adminSalesEmails,
-                "ArkCrest: Commission Release {$prefix} {$displayDate}",
-                "Commission Release {$when} — {$displayDate}",
-                $rows
-            );
-            $this->info("Commission release reminder sent ({$commReleases->count()} record/s).");
-        }
-
-        // ── 2. Downpayments → admin + admin sales ───────────────────────
-        $downpayments = CommissionRequestSales::whereDate('date_of_downpayment', $date)
-            ->where('client_status', '!=', 'Done')->get();
-
-        if ($downpayments->isNotEmpty()) {
-            $rows = $downpayments->map(fn($c) =>
-                "<b>📋 Downpayment Due {$when}</b><br>" .
-                "{$c->client_name} — {$c->project_name} | Agent: {$c->agent_name}<br><br>"
-            )->implode('');
-
-            $this->sendToRecipients(
-                $adminSalesEmails,
-                "ArkCrest: Downpayment Due {$prefix} {$displayDate}",
-                "Downpayment Due {$when} — {$displayDate}",
-                $rows
-            );
-            $this->info("Downpayment reminder sent ({$downpayments->count()} record/s).");
-        }
-
-        // ── 3. Site Visits → admin + admin sales + the agent ────────────
-        $trips = TripSchedule::whereDate('tripping_date', $date)
-            ->whereIn('status', ['confirmed', 'pending'])->get();
-
-        if ($trips->isNotEmpty()) {
-            // Group by agent so each agent gets their own trips
-            $tripsByAgent = $trips->groupBy('agent_name');
-
-            // Build full list for admin/sales admin
-            $adminRows = $trips->map(function($t) use ($when) {
-                $time = $t->tripping_time ? Carbon::parse($t->tripping_time)->format('g:i A') : 'Time TBD';
-                return "<b>🏠 Site Visit {$when}</b><br>" .
-                    "{$t->client_name} — {$t->property_name} | Agent: {$t->agent_name} | {$time}<br><br>";
-            })->implode('');
-
-            $this->sendToRecipients(
-                $adminSalesEmails,
-                "ArkCrest: Site Visit {$prefix} {$displayDate}",
-                "Site Visit {$when} — {$displayDate}",
-                $adminRows
-            );
-
-            // Send to each agent their own trips
-            foreach ($tripsByAgent as $agentName => $agentTrips) {
-                $agentUser = User::where('name', $agentName)
-                    ->where('status', 'active')
-                    ->whereNotNull('email')
-                    ->where('email', 'not like', 'pending_%')
-                    ->first();
-
-                if (!$agentUser) continue;
-                // Skip if already in admin list
-                if (in_array($agentUser->email, $adminSalesEmails)) continue;
-
-                $agentRows = $agentTrips->map(function($t) use ($when) {
-                    $time = $t->tripping_time ? Carbon::parse($t->tripping_time)->format('g:i A') : 'Time TBD';
-                    return "<b>🏠 Your Site Visit {$when}</b><br>" .
-                        "{$t->client_name} — {$t->property_name} | {$time}<br><br>";
-                })->implode('');
-
-                $this->sendToRecipients(
-                    [$agentUser->email],
-                    "ArkCrest: Your Site Visit {$prefix} {$displayDate}",
-                    "Your Site Visit {$when} — {$displayDate}",
-                    $agentRows
-                );
-            }
-
-            $this->info("Site visit reminder sent ({$trips->count()} trip/s).");
-        }
-
-        if ($commReleases->isEmpty() && $downpayments->isEmpty() && $trips->isEmpty()) {
-            $this->info("No events for {$when} ({$displayDate}). No email sent.");
-        }
+        $this->handleCommissionReleases($date, $displayDate, $when);
+        $this->handleDownpayments($date, $displayDate, $when);
+        $this->handleTrippings($date, $displayDate, $when);
 
         $this->info('Done.');
     }
 
-    private function getAdminAndSalesAdminEmails(): array
+    // ── 1. Commission Releases → all admins (email + in-app) ─────────────────
+    private function handleCommissionReleases(string $date, string $displayDate, string $when): void
+    {
+        $releases = collect();
+        CommissionRequestSales::whereDate('date_released', $date)
+            ->where('status', 'Not Yet Released')->get()->each(fn($r) => $releases->push($r));
+        CommissionRequest::whereDate('date_released', $date)
+            ->where('status', 'Not Yet Released')->get()->each(fn($r) => $releases->push($r));
+
+        if ($releases->isEmpty()) return;
+
+        $admins = $this->getAdminUsers();
+        if ($admins->isEmpty()) return;
+
+        $rows = $releases->map(fn($r) =>
+            "<b>💰 Commission Release {$when}</b><br>" .
+            ($r->client_name ?? '—') . " — " . ($r->project_name ?? '—') .
+            " | Agent: " . ($r->agent_name ?? '—') .
+            " | ₱" . number_format($r->commission ?? 0, 2) . "<br><br>"
+        )->implode('');
+
+        $subject = "ArkCrest: Commission Release {$when} — {$displayDate}";
+        $title   = "Commission Release {$when} — {$displayDate}";
+        $notifMsg = $releases->count() . " commission release(s) scheduled for {$when}.";
+
+        foreach ($admins as $admin) {
+            $this->sendEmail([$admin->email], $subject, $title, $rows, $admin->name);
+            SystemNotification::notify($admin->id, 'commission_reminder', "💰 Commission Release {$when}", $notifMsg);
+        }
+
+        $this->info("Commission release reminder sent ({$releases->count()} record/s).");
+    }
+
+    // ── 2. Downpayments → all admins + admin sales (email + in-app) ──────────
+    private function handleDownpayments(string $date, string $displayDate, string $when): void
+    {
+        $downpayments = CommissionRequestSales::whereDate('date_of_downpayment', $date)
+            ->where('client_status', '!=', 'Done')->get();
+
+        if ($downpayments->isEmpty()) return;
+
+        $recipients = $this->getAdminAndSalesAdminUsers();
+        if ($recipients->isEmpty()) return;
+
+        $rows = $downpayments->map(fn($d) =>
+            "<b>📋 Downpayment Due {$when}</b><br>" .
+            "{$d->client_name} — {$d->project_name} | Agent: {$d->agent_name}<br><br>"
+        )->implode('');
+
+        $subject  = "ArkCrest: Downpayment Due {$when} — {$displayDate}";
+        $title    = "Downpayment Due {$when} — {$displayDate}";
+        $notifMsg = $downpayments->count() . " downpayment(s) due {$when}.";
+
+        foreach ($recipients as $user) {
+            $this->sendEmail([$user->email], $subject, $title, $rows, $user->name);
+            SystemNotification::notify($user->id, 'downpayment_reminder', "📋 Downpayment Due {$when}", $notifMsg);
+        }
+
+        $this->info("Downpayment reminder sent ({$downpayments->count()} record/s).");
+    }
+
+    // ── 3. Trippings → all admins + admin sales + the agent (email + in-app) ──
+    private function handleTrippings(string $date, string $displayDate, string $when): void
+    {
+        $trips = TripSchedule::whereDate('tripping_date', $date)
+            ->whereIn('status', ['confirmed', 'pending'])->get();
+
+        if ($trips->isEmpty()) return;
+
+        $adminSalesUsers = $this->getAdminAndSalesAdminUsers();
+        $adminSalesIds   = $adminSalesUsers->pluck('id')->toArray();
+
+        // Full list for admins/sales admins
+        $adminRows = $trips->map(function($t) use ($when) {
+            $time = $t->tripping_time ? Carbon::parse($t->tripping_time)->format('g:i A') : 'Time TBD';
+            return "<b>🏠 Site Visit {$when}</b><br>" .
+                "{$t->client_name} — {$t->property_name} | Agent: {$t->agent_name} | {$time}<br><br>";
+        })->implode('');
+
+        $notifMsg = $trips->count() . " site visit(s) scheduled for {$when}.";
+
+        foreach ($adminSalesUsers as $user) {
+            $this->sendEmail([$user->email], "ArkCrest: Site Visit {$when} — {$displayDate}", "Site Visit {$when} — {$displayDate}", $adminRows, $user->name);
+            SystemNotification::notify($user->id, 'tripping_reminder', "🏠 Site Visit {$when}", $notifMsg);
+        }
+
+        // Per-agent: their own trips only
+        $tripsByAgent = $trips->groupBy('agent_name');
+        foreach ($tripsByAgent as $agentName => $agentTrips) {
+            $agentUser = User::where('name', $agentName)
+                ->where('status', 'active')
+                ->whereNotNull('email')
+                ->where('email', 'not like', 'pending_%')
+                ->first();
+
+            if (!$agentUser || in_array($agentUser->id, $adminSalesIds)) continue;
+
+            $agentRows = $agentTrips->map(function($t) use ($when) {
+                $time = $t->tripping_time ? Carbon::parse($t->tripping_time)->format('g:i A') : 'Time TBD';
+                return "<b>🏠 Your Site Visit {$when}</b><br>" .
+                    "{$t->client_name} — {$t->property_name} | {$time}<br><br>";
+            })->implode('');
+
+            $agentNotifMsg = $agentTrips->count() . " site visit(s) assigned to you for {$when}.";
+            $this->sendEmail([$agentUser->email], "ArkCrest: Your Site Visit {$when} — {$displayDate}", "Your Site Visit {$when} — {$displayDate}", $agentRows, $agentUser->name);
+            SystemNotification::notify($agentUser->id, 'tripping_reminder', "🏠 Your Site Visit {$when}", $agentNotifMsg);
+        }
+
+        $this->info("Site visit reminder sent ({$trips->count()} trip/s).");
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    private function getAdminUsers()
+    {
+        return User::where('role', 'admin')
+            ->where('status', 'active')
+            ->whereNotNull('email')
+            ->where('email', 'not like', 'pending_%')
+            ->get();
+    }
+
+    private function getAdminAndSalesAdminUsers()
     {
         return User::where(function($q) {
                 $q->where('role', 'admin')
@@ -142,17 +162,15 @@ class SendEventReminders extends Command
             ->where('status', 'active')
             ->whereNotNull('email')
             ->where('email', 'not like', 'pending_%')
-            ->pluck('email')
-            ->unique()
-            ->toArray();
+            ->get()
+            ->unique('id');
     }
 
-    private function sendToRecipients(array $emails, string $subject, string $title, string $body): void
+    private function sendEmail(array $emails, string $subject, string $title, string $body, string $recipientName = ''): void
     {
         if (empty($emails)) return;
 
-        // Load SMTP — prefer DB settings, fallback to .env
-        $s = \DB::table('app_settings')->pluck('value', 'key');
+        $s            = \DB::table('app_settings')->pluck('value', 'key');
         $smtpHost     = $s['smtp_host']     ?? config('mail.mailers.smtp.host');
         $smtpPort     = $s['smtp_port']     ?? config('mail.mailers.smtp.port', '587');
         $smtpUser     = $s['smtp_username'] ?? config('mail.from.address');
@@ -175,18 +193,14 @@ class SendEventReminders extends Command
             'mail.default'                 => 'smtp',
         ]);
 
+        $html = AdminEmailNotifier::buildPublicHtml($title, $body, $recipientName);
+
         foreach ($emails as $email) {
-            // Get recipient name from users table
-            $user = User::where('email', $email)->first();
-            $recipientName = $user ? $user->name : '';
-
-            $html = AdminEmailNotifier::buildPublicHtml($title, $body, $recipientName);
-
             try {
                 Mail::html($html, fn($msg) => $msg->to($email)->subject($subject)->from($smtpUser, $smtpFromName));
                 $this->info("  → Sent to {$email}");
             } catch (\Exception $e) {
-                $this->error("  ✗ Failed to send to {$email}: " . $e->getMessage());
+                $this->error("  ✗ Failed {$email}: " . $e->getMessage());
             }
         }
     }
