@@ -1709,25 +1709,31 @@
         <div class="st-card"><div class="st-card-body"><div class="st-empty">No contacts yet. Use "+ Add New Group" above.</div></div></div>
       @else
       @php $grouped = $personnelContacts->groupBy(fn($c) => $c->company ?: 'Others'); @endphp
+      <div id="contact-groups-wrap">
       @foreach($grouped as $grpCompany => $contacts)
       @php $slug = Str::slug($grpCompany); @endphp
-      <div class="st-card" style="margin-bottom:14px;">
-        <div class="st-card-hdr" style="background:linear-gradient(135deg,#0f2444,#1a3a6b);border-radius:11px 11px 0 0;">
-          <div style="font-size:12px;font-weight:700;color:#d4a03a;text-transform:uppercase;letter-spacing:1px;">{{ $grpCompany }}</div>
+      <div class="st-card contact-group-card" style="margin-bottom:14px;" data-group="{{ $grpCompany }}">
+        <div class="st-card-hdr" style="background:linear-gradient(135deg,#0f2444,#1a3a6b);border-radius:11px 11px 0 0;cursor:grab;" draggable="true">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="color:rgba(212,160,58,.5);font-size:16px;cursor:grab;" title="Drag to reorder group">⠿</span>
+            <div style="font-size:12px;font-weight:700;color:#d4a03a;text-transform:uppercase;letter-spacing:1px;">{{ $grpCompany }}</div>
+          </div>
           <button type="button" class="st-btn st-btn-sm" style="background:rgba(212,160,58,.2);color:#d4a03a;border:1px solid rgba(212,160,58,.4);" onclick="openAddContactModal('{{ addslashes($grpCompany) }}', this)">+ Add</button>
         </div>
         <div style="overflow-x:auto;">
         <table style="width:100%;border-collapse:collapse;min-width:600px;white-space:nowrap;">
           <thead><tr style="background:#f8fafc;">
+            <th style="padding:9px 8px;width:24px;border-bottom:1px solid #f1f5f9;"></th>
             <th style="padding:9px 16px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #f1f5f9;">Name</th>
             <th style="padding:9px 16px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #f1f5f9;">Contact No.</th>
             <th style="padding:9px 16px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #f1f5f9;">Email</th>
             <th style="padding:9px 16px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #f1f5f9;">Facebook</th>
             <th style="padding:9px 16px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid #f1f5f9;">Actions</th>
           </tr></thead>
-          <tbody>
+          <tbody class="contact-tbody" data-group="{{ $grpCompany }}">
             @foreach($contacts as $contact)
-            <tr style="border-bottom:1px solid #f8fafc;" id="contact-row-{{ $contact->id }}">
+            <tr style="border-bottom:1px solid #f8fafc;" id="contact-row-{{ $contact->id }}" data-id="{{ $contact->id }}" draggable="true">
+              <td style="padding:11px 8px;color:#cbd5e1;cursor:grab;font-size:16px;text-align:center;" title="Drag to reorder">⠿</td>
               <td style="padding:11px 16px;font-size:13px;font-weight:600;color:#0f172a;">{{ $contact->name }}</td>
               <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $contact->phone ?: '—' }}</td>
               <td style="padding:11px 16px;font-size:13px;">@if($contact->email)<a href="mailto:{{ $contact->email }}" style="color:#1e4575;text-decoration:none;">{{ $contact->email }}</a>@else —@endif</td>
@@ -1747,6 +1753,7 @@
         </div>
       </div>
       @endforeach
+      </div>
       @endif
 
       {{-- Add New Group Modal --}}
@@ -1917,6 +1924,112 @@ function openContactModal(id, name, company, phone, email, facebook, btn) {
 function closeContactModal() {
     document.getElementById('contactEditModal').style.display = 'none';
 }
+
+// ── ARC Contact List drag-and-drop ──────────────────────────────────────────
+(function() {
+    let dragSrc = null;
+
+    // Row drag within a tbody
+    function initRowDrag(tbody) {
+        tbody.querySelectorAll('tr[data-id]').forEach(row => {
+            row.addEventListener('dragstart', e => {
+                dragSrc = row;
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => row.style.opacity = '0.4', 0);
+            });
+            row.addEventListener('dragend', () => {
+                row.style.opacity = '';
+                tbody.querySelectorAll('tr').forEach(r => r.style.background = '');
+                saveRowOrder(tbody);
+            });
+            row.addEventListener('dragover', e => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (row !== dragSrc) row.style.background = '#e0f2fe';
+            });
+            row.addEventListener('dragleave', () => row.style.background = '');
+            row.addEventListener('drop', e => {
+                e.preventDefault();
+                if (dragSrc && dragSrc !== row && dragSrc.closest('tbody') === tbody) {
+                    const rows = [...tbody.querySelectorAll('tr[data-id]')];
+                    const srcIdx = rows.indexOf(dragSrc);
+                    const tgtIdx = rows.indexOf(row);
+                    if (srcIdx < tgtIdx) tbody.insertBefore(dragSrc, row.nextSibling);
+                    else tbody.insertBefore(dragSrc, row);
+                }
+                row.style.background = '';
+            });
+        });
+    }
+
+    function saveRowOrder(tbody) {
+        const items = [...tbody.querySelectorAll('tr[data-id]')].map((r, i) => ({
+            id: parseInt(r.dataset.id), sort_order: i
+        }));
+        fetch('/api/personnel-contacts/reorder', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
+            body: JSON.stringify({items})
+        });
+    }
+
+    // Group drag
+    let dragGroup = null;
+    function initGroupDrag(wrap) {
+        wrap.querySelectorAll('.contact-group-card').forEach(card => {
+            const hdr = card.querySelector('.st-card-hdr');
+            hdr.addEventListener('dragstart', e => {
+                dragGroup = card;
+                e.dataTransfer.effectAllowed = 'move';
+                setTimeout(() => card.style.opacity = '0.4', 0);
+            });
+            hdr.addEventListener('dragend', () => {
+                card.style.opacity = '';
+                wrap.querySelectorAll('.contact-group-card').forEach(c => c.style.outline = '');
+                saveGroupOrder(wrap);
+            });
+            card.addEventListener('dragover', e => {
+                e.preventDefault();
+                if (card !== dragGroup) card.style.outline = '2px solid #2563eb';
+            });
+            card.addEventListener('dragleave', () => card.style.outline = '');
+            card.addEventListener('drop', e => {
+                e.preventDefault();
+                if (dragGroup && dragGroup !== card) {
+                    const cards = [...wrap.querySelectorAll('.contact-group-card')];
+                    const srcIdx = cards.indexOf(dragGroup);
+                    const tgtIdx = cards.indexOf(card);
+                    if (srcIdx < tgtIdx) wrap.insertBefore(dragGroup, card.nextSibling);
+                    else wrap.insertBefore(dragGroup, card);
+                }
+                card.style.outline = '';
+            });
+        });
+    }
+
+    function saveGroupOrder(wrap) {
+        // Collect all rows in new group order and save their sort_order
+        const items = [];
+        let order = 0;
+        wrap.querySelectorAll('.contact-group-card').forEach(card => {
+            card.querySelectorAll('tr[data-id]').forEach(row => {
+                items.push({id: parseInt(row.dataset.id), sort_order: order++});
+            });
+        });
+        fetch('/api/personnel-contacts/reorder', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json','X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content},
+            body: JSON.stringify({items})
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const wrap = document.getElementById('contact-groups-wrap');
+        if (!wrap) return;
+        initGroupDrag(wrap);
+        wrap.querySelectorAll('.contact-tbody').forEach(initRowDrag);
+    });
+})();
 document.addEventListener('DOMContentLoaded', function() {
     const params = new URLSearchParams(window.location.search);
     const panel  = params.get('panel');

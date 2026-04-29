@@ -174,7 +174,7 @@ class SettingsController extends Controller
                 $user = \App\Models\User::where('employee_id', $r->agent_name)->first();
                 if ($user) $r->agent_name = $user->name;
             }),
-            'personnelContacts'  => \App\Models\PersonnelContact::orderBy('id')->get(),
+            'personnelContacts'  => \App\Models\PersonnelContact::orderBy('sort_order')->orderBy('id')->get(),
             'onlineUserIds'      => Schema::hasColumn('users', 'last_seen_at')
                 ? User::whereNotNull('last_seen_at')->where('last_seen_at', '>=', now()->subMinutes(2))->pluck('id')->toArray()
                 : [],
@@ -504,7 +504,8 @@ class SettingsController extends Controller
 
     public function updatePersonnelContact(Request $request, $id)
     {
-        if (!auth()->user()->isAdmin() && !$this->canAccessSetting('settings.personnel')) abort(403);
+        $user = auth()->user();
+        if (!$user->isAdmin() && in_array('settings.personnel', $user->hidden_pages ?? [])) abort(403);
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'company'  => 'nullable|string|max:255',
@@ -519,7 +520,18 @@ class SettingsController extends Controller
 
     public function destroyPersonnelContact($id)
     {
+        $user = auth()->user();
+        if (!$user->isAdmin() && in_array('settings.personnel', $user->hidden_pages ?? [])) abort(403);
         \App\Models\PersonnelContact::findOrFail($id)->delete();
         return back()->with('success', 'Contact removed.')->with('open_section', 'personnel-contacts');
+    }
+
+    public function reorderPersonnelContacts(Request $request)
+    {
+        $request->validate(['items' => 'required|array', 'items.*.id' => 'required|integer', 'items.*.sort_order' => 'required|integer']);
+        foreach ($request->items as $item) {
+            \App\Models\PersonnelContact::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+        }
+        return response()->json(['success' => true]);
     }
 }
