@@ -33,19 +33,18 @@ class SendEventReminders extends Command
         $displayDate = Carbon::tomorrow()->format('F j, Y');
         $events      = $this->collectEvents($tomorrow, 'tomorrow');
 
-        if (!empty($events)) {
-            $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
-            $body = $rows;
-        } else {
-            $body = "<i style='color:#94a3b8;'>No scheduled events for tomorrow.</i>";
+        if (empty($events)) {
+            $this->info("No events for tomorrow ({$displayDate}). No email sent.");
+            return;
         }
 
+        $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
         \App\Services\AdminEmailNotifier::send(
             "ArkCrest Reminder: Events on {$displayDate}",
-            "Tomorrow's Events — {$displayDate}",
-            $body
+            "Tomorrow's Important Events — {$displayDate}",
+            $rows
         );
-        $this->info("Day-before reminder sent for {$displayDate}.");
+        $this->info("Day-before reminder sent for {$displayDate} (" . count($events) . " event/s).");
     }
 
     private function sendSameDayReminders(): void
@@ -54,19 +53,18 @@ class SendEventReminders extends Command
         $displayDate = Carbon::today()->format('F j, Y');
         $events      = $this->collectEvents($today, 'today');
 
-        if (!empty($events)) {
-            $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
-            $body = $rows;
-        } else {
-            $body = "<i style='color:#94a3b8;'>No scheduled events for today.</i>";
+        if (empty($events)) {
+            $this->info("No events for today ({$displayDate}). No email sent.");
+            return;
         }
 
+        $rows = implode('', array_map(fn($e) => "<b>{$e['type']}</b><br>{$e['detail']}<br><br>", $events));
         \App\Services\AdminEmailNotifier::send(
             "ArkCrest Reminder: Events TODAY — {$displayDate}",
-            "Today's Events — {$displayDate}",
-            $body
+            "Today's Important Events — {$displayDate}",
+            $rows
         );
-        $this->info("Same-day reminder sent for {$displayDate}.");
+        $this->info("Same-day reminder sent for {$displayDate} (" . count($events) . " event/s).");
     }
 
     private function collectEvents(string $date, string $when): array
