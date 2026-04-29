@@ -83,8 +83,7 @@ body{display:flex;align-items:center;justify-content:center;background:linear-gr
             <div class="brand-name">ARCKREST REALTY CORPORATION</div>
         </div>
         <div id="greetingText" style="font-size:16px;font-weight:700;color:white;text-align:center;margin:10px 0 0;padding:0 20px;">
-            @php $h = (int)now()->format('H'); $tod = $h < 12 ? 'Morning' : ($h < 18 ? 'Afternoon' : 'Evening'); @endphp
-            Happy ArkCrest {{ $tod }}@if(auth()->check()), {{ explode(' ', auth()->user()->name)[0] }}@endif!
+            Happy ArkCrest Morning@if(auth()->check()), {{ explode(' ', auth()->user()->name)[0] }}@endif!
         </div>
         <div class="ov-body">
             <div class="ov-tag">Site Visit</div>
@@ -291,10 +290,15 @@ var greetTimer;
 function updateGreeting(){
     var empId=document.querySelector('[name="agent_name"]').value.trim();
     var g=document.getElementById('greetingText');
-    var h=new Date().getHours();
-    var tod=h<12?'Morning':h<18?'Afternoon':'Evening';
     if(!g) return;
-    if(!empId){g.textContent='Happy ArkCrest '+tod+'!';return;}
+    if(!empId){
+        @auth
+        g.textContent='Happy ArkCrest Morning, {{ explode(' ', auth()->user()->name)[0] }}!';
+        @else
+        g.textContent='Happy ArkCrest Morning!';
+        @endauth
+        return;
+    }
     clearTimeout(greetTimer);
     greetTimer=setTimeout(function(){
         fetch('/api/tripping/agent-details?employee_id='+encodeURIComponent(empId))
@@ -302,11 +306,11 @@ function updateGreeting(){
         .then(function(d){
             if(d.found){
                 var display=(d.salutation?d.salutation+' ':'')+d.name;
-                g.textContent='Happy ArkCrest '+tod+', '+display+'!';
+                g.textContent='Happy ArkCrest Morning, '+display+'!';
             } else {
-                g.textContent='Happy ArkCrest '+tod+'!';
+                g.textContent='Happy ArkCrest Morning!';
             }
-        }).catch(function(){g.textContent='Happy ArkCrest '+tod+'!';});
+        }).catch(function(){g.textContent='Happy ArkCrest Morning!';});
     },400);
 }
 document.querySelector('[name="agent_name"]').addEventListener('input',updateGreeting);
