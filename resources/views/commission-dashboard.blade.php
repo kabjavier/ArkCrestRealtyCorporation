@@ -24,7 +24,7 @@
 .cd-table td{padding:11px 16px;font-size:13px;color:#374151;vertical-align:middle}
 .cd-badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700}
 .cd-badge-released{background:#dcfce7;color:#166534}
-.cd-badge-pending{background:#fef3c7;color:#92400e}
+.cd-badge-pending{background:#fee2e2;color:#991b1b}
 .cd-bar-wrap{background:#f1f5f9;border-radius:4px;height:6px;overflow:hidden;min-width:80px}
 .cd-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#1e4575,#2563eb);transition:width .4s}
 .cd-search{position:relative}
@@ -182,7 +182,7 @@ $byAgent = $all->groupBy('agent_name')->map(function($rows, $agent) {
                 <td style="color:#16a34a;font-weight:600;">{{ $tx->commission ? '₱'.number_format($tx->commission, 2) : '—' }}</td>
                 <td style="color:#64748b;">{{ $tx->date_requested ? $tx->date_requested->format('M d, Y') : '—' }}</td>
                 <td>
-                    <span class="cd-badge {{ $tx->status === 'Released' ? 'cd-badge-released' : 'cd-badge-pending' }}">{{ $tx->status ?: 'Pending' }}</span>
+                    <span class="cd-badge {{ $tx->status === 'Released' ? 'cd-badge-released' : 'cd-badge-pending' }}">{{ $tx->status ?: 'Not Yet Released' }}</span>
                 </td>
             </tr>
             @empty
