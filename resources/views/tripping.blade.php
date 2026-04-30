@@ -288,8 +288,7 @@ document.getElementById('propertyNameInput').addEventListener('blur',function(){
 document.getElementById('clientNameInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();revealClientFields();checkDuplicate();}});
 document.getElementById('clientNameInput').addEventListener('blur',function(){setTimeout(function(){if(document.getElementById('clientNameInput').value.trim()){revealClientFields();checkDuplicate();}},300);});
 var greetTimer;
-var _defaultGreeting = 'Happy ArkCrest Morning{{ $firstName ? ", ".$firstName : "" }}!';
-function updateGreeting(){
+var _defaultGreeting = 'Happy ArkCrest Morning{{ $firstName ? ", ".$firstName : "" }}!';function updateGreeting(){
     var empId=document.querySelector('[name="agent_name"]').value.trim();
     var g=document.getElementById('greetingText');
     if(!g) return;
