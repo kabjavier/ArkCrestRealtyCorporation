@@ -125,9 +125,15 @@
                                 @if(isset($sysNotifs) && $sysNotifs->count() > 0)
                                     @foreach($sysNotifs as $notif)
                                     <div class="notification-item {{ $notif->is_read ? '' : 'unread' }}"
-                                        style="cursor:{{ in_array($notif->type, ['note_reminder','user_pending','permission_request']) ? 'pointer' : 'default' }};{{ $notif->is_read && !in_array($notif->type, ['user_pending','permission_request','note_reminder']) ? 'opacity:0.5;pointer-events:none;' : '' }}"
+                                        style="cursor:{{ in_array($notif->type, ['note_reminder','user_pending','permission_request','commission_reminder','downpayment_reminder','tripping_reminder']) ? 'pointer' : 'default' }};{{ $notif->is_read && !in_array($notif->type, ['user_pending','permission_request','note_reminder','commission_reminder','downpayment_reminder','tripping_reminder']) ? 'opacity:0.5;pointer-events:none;' : '' }}"
                                         @if($notif->type === 'note_reminder')
                                         onclick="event.stopPropagation();openNoteModal({{ $notif->note_id ?? 0 }}, '{{ addslashes($notif->title) }}', '{{ addslashes($notif->message) }}', this, {{ $notif->id }})"
+                                        @elseif($notif->type === 'commission_reminder')
+                                        onclick="event.stopPropagation();window.location='{{ route('commission-monitoring') }}'"
+                                        @elseif($notif->type === 'downpayment_reminder')
+                                        onclick="event.stopPropagation();window.location='{{ route('commission-monitoring') }}'"
+                                        @elseif($notif->type === 'tripping_reminder')
+                                        onclick="event.stopPropagation();window.location='{{ route('site-visit-database') }}'"
                                         @elseif($notif->type === 'user_pending')
                                         onclick="event.stopPropagation();window.location='{{ route('settings') }}?panel=users'"
                                         @elseif($notif->type === 'permission_request' && auth()->user()->isAdmin())
