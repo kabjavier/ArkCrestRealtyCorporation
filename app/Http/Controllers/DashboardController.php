@@ -90,8 +90,8 @@ class DashboardController extends Controller
             $monthlySales[] = $report ? (float)$report->gross_sales : 0;
         }
 
-        // Receivables = all "Not Yet Released" commissions (all time, not just current month)
-        $receivables = CommissionRequestSales::where('status', 'Not Yet Released')->sum('commission');
+        // Receivables = all "Not Yet Released" commissions from Commission Monitoring
+        $receivables = CommissionRequest::where('status', 'Not Yet Released')->sum('commission');
         
         // Exclude CAPEX from dashboard
         $departments = Department::where('slug', '!=', 'capex')->get();
