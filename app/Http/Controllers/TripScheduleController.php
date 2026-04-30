@@ -37,14 +37,14 @@ class TripScheduleController extends Controller
             'tripping_type.required' => 'Mode of visit is required.',
         ]);
 
-        // Server-side duplicate check
+        // Server-side duplicate check — block if same client + same property with active or done tripping
         $duplicate = TripSchedule::whereRaw('LOWER(TRIM(client_name)) = ?', [strtolower(trim($request->client_name))])
             ->whereRaw('LOWER(TRIM(property_name)) = ?', [strtolower(trim($request->property_name))])
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('status', ['pending', 'confirmed', 'done'])
             ->exists();
 
         if ($duplicate) {
-            return back()->withErrors(['client_name' => 'This client already has an active/pending tripping for the same property.'])->withInput();
+            return back()->withErrors(['client_name' => 'This client already has a scheduled or completed site visit for the same property.'])->withInput();
         }
 
         TripSchedule::create(array_merge($request->only([
@@ -322,7 +322,7 @@ class TripScheduleController extends Controller
 
         $existing = TripSchedule::whereRaw('LOWER(TRIM(client_name)) = ?', [strtolower($client)])
             ->whereRaw('LOWER(TRIM(property_name)) = ?', [strtolower($property)])
-            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereIn('status', ['pending', 'confirmed', 'done'])
             ->select('tripping_date', 'tripping_time', 'status', 'agent_name')
             ->latest()->first();
 
