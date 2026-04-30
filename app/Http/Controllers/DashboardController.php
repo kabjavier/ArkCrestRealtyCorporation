@@ -42,13 +42,36 @@ class DashboardController extends Controller
         $currentYear = now()->format('Y');
         $currentMonthNumber = now()->month;
         
-        // Get summary report for current month
-        $summaryReport = SummaryReport::where('month', $currentMonthNumber)
-            ->where('year', $currentYear)
-            ->first();
-        
-        $units = $summaryReport ? $summaryReport->units : 0;
-        $grossSales = $summaryReport ? $summaryReport->gross_sales : 0;
+        // Monthly Performance from Client Database (CommissionRequestSales)
+        $monthStart = now()->startOfMonth()->toDateString();
+        $monthEnd   = now()->endOfMonth()->toDateString();
+
+        // Units = clients who have made a downpayment this month (not cancelled)
+        $units = CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$monthStart, $monthEnd])
+            ->where('client_status', '!=', 'Cancelled')
+            ->count();
+
+        // Gross Sales = net_tcp of clients who have made a downpayment this month
+        $grossSales = CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$monthStart, $monthEnd])
+            ->where('client_status', '!=', 'Cancelled')
+            ->sum('net_tcp');
+
+        // Pending Reservation = reserved but no downpayment yet, not cancelled
+        $pendingReservation = CommissionRequestSales::whereNotNull('reservation_date')
+            ->whereNull('date_of_downpayment')
+            ->where('client_status', '!=', 'Cancelled')
+            ->whereBetween('reservation_date', [$monthStart, $monthEnd])
+            ->count();
+
+        // Cancelled Reservation = cancelled this month
+        $cancelledReservation = CommissionRequestSales::where('client_status', 'Cancelled')
+            ->whereBetween('reservation_date', [$monthStart, $monthEnd])
+            ->count();
+
+        // Total Reservation = units + pending - cancelled
+        $totalReservation = $units + $pendingReservation - $cancelledReservation;
 
         // Yearly total sales from summary reports
         $yearlySales = SummaryReport::where('year', $currentYear)->sum('gross_sales');
@@ -126,6 +149,6 @@ class DashboardController extends Controller
               ->orWhereDate('date_of_downpayment', $today);
         })->count();
 
-        return view('dashboard', compact('departmentData', 'totalExpenses', 'expenseBreakdown', 'currentMonth', 'currentYear', 'units', 'grossSales', 'yearlySales', 'receivables', 'monthlySales', 'tomorrowReleases', 'todayTrips', 'todayReleases', 'todayEvents'));
+        return view('dashboard', compact('departmentData', 'totalExpenses', 'expenseBreakdown', 'currentMonth', 'currentYear', 'units', 'grossSales', 'yearlySales', 'receivables', 'monthlySales', 'tomorrowReleases', 'todayTrips', 'todayReleases', 'todayEvents', 'pendingReservation', 'cancelledReservation', 'totalReservation'));
     }
 }
