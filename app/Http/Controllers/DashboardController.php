@@ -60,17 +60,13 @@ class DashboardController extends Controller
             ->where('client_status', '!=', 'Cancelled')
             ->sum('net_tcp');
 
-        // Pending Reservation = reserved but no downpayment yet, not cancelled
-        $pendingReservation = CommissionRequestSales::whereNotNull('reservation_date')
-            ->whereNull('date_of_downpayment')
+        // Pending Reservation = in client database, reserved but no downpayment yet, not cancelled
+        $pendingReservation = CommissionRequestSales::whereNull('date_of_downpayment')
             ->where('client_status', '!=', 'Cancelled')
-            ->whereBetween('reservation_date', [$monthStart, $monthEnd])
             ->count();
 
-        // Cancelled Reservation = cancelled this month
-        $cancelledReservation = CommissionRequestSales::where('client_status', 'Cancelled')
-            ->whereBetween('reservation_date', [$monthStart, $monthEnd])
-            ->count();
+        // Cancelled Reservation = all cancelled records in client database
+        $cancelledReservation = CommissionRequestSales::where('client_status', 'Cancelled')->count();
 
         // Total Reservation = units + pending - cancelled
         $totalReservation = $units + $pendingReservation - $cancelledReservation;
