@@ -21,16 +21,12 @@ class RestrictSalesPersons
         $isSales = str_contains($pos, 'sales');
 
         if ($isSales) {
-            // Allow only tripping form and logout
-            $allowed = [
-                route('tripping', [], false),
-                route('tripping.store', [], false),
-                route('logout', [], false),
-                '/api/tripping',
-            ];
-
             $path = '/' . ltrim($request->path(), '/');
-            $isAllowed = collect($allowed)->contains(fn($a) => str_starts_with($path, $a))
+
+            // Allow tripping form, logout, login, and tripping API routes
+            $isAllowed = $path === '/tripping'
+                || $path === '/logout'
+                || $path === '/login'
                 || str_starts_with($path, '/api/tripping');
 
             if (!$isAllowed) {
