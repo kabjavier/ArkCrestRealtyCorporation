@@ -67,10 +67,10 @@
             <div class="metric-value">{{ number_format($units, 0) }} <span style="font-size:14px;font-weight:500;color:#64748b;">units</span></div>
             <div style="font-size:15px;font-weight:700;color:#1e4575;margin-top:2px;">&#8369;{{ number_format($grossSales, 0) }}</div>
             <div class="metric-subtitle">Gross Sales — {{ $currentMonth }} {{ $currentYear }}</div>
-            <div style="margin-top:8px;font-size:11px;color:#64748b;line-height:1.8;">
-                <div>Pending Reservation: <strong>{{ $pendingReservation }}</strong></div>
-                <div>Cancelled Reservation: <strong>{{ $cancelledReservation }}</strong></div>
-                <div style="border-top:1px solid #e2e8f0;margin-top:4px;padding-top:4px;color:#1e4575;font-weight:700;">Total Reservation: {{ $totalReservation }}</div>
+            <div style="margin-top:6px;font-size:11px;color:#94a3b8;line-height:1.7;">
+                Pending: <strong style="color:#64748b;">{{ $pendingReservation }}</strong> &bull;
+                Cancelled: <strong style="color:#64748b;">{{ $cancelledReservation }}</strong> &bull;
+                Total: <strong style="color:#1e4575;">{{ $totalReservation }}</strong>
             </div>
         </div>
     </div>
