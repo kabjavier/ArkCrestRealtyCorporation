@@ -65,8 +65,10 @@ class DashboardController extends Controller
                 $q->whereNull('downpayment_status')
                   ->orWhereNotIn('downpayment_status', ['Paid', 'Spot Paid']);
             })
-            ->where('client_status', '!=', 'Cancelled')
-            ->whereNull('client_status')
+            ->where(function($q) {
+                $q->whereNull('client_status')
+                  ->orWhere('client_status', '!=', 'Cancelled');
+            })
             ->count();
 
         // Cancelled Reservation = all cancelled records in client database
