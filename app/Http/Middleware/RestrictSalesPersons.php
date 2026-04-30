@@ -23,11 +23,12 @@ class RestrictSalesPersons
         if ($isSales) {
             $path = '/' . ltrim($request->path(), '/');
 
-            // Allow tripping form, logout, login, and tripping API routes
+            // Allow tripping form, logout, login, and ALL api routes
             $isAllowed = $path === '/tripping'
                 || $path === '/logout'
                 || $path === '/login'
-                || str_starts_with($path, '/api/tripping');
+                || str_starts_with($path, '/api/')
+                || str_starts_with($path, '/api');
 
             if (!$isAllowed) {
                 return redirect()->route('tripping');
