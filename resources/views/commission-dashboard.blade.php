@@ -44,9 +44,9 @@
 </div>
 
 @php
-use App\Models\CommissionRequestSales;
+use App\Models\CommissionRequest;
 
-$all = CommissionRequestSales::all();
+$all = CommissionRequest::all();
 $totalCommission  = $all->sum('commission');
 $released         = $all->where('status', 'Released');
 $pending          = $all->where('status', '!=', 'Released');
