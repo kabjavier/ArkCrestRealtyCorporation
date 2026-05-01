@@ -93,8 +93,10 @@ class SummaryReportController extends Controller
 
         $totalReservation = $units + $pendingReservation - $cancelledReservation;
 
-        // Net TCP from Client Database for selected month
-        $netTcp = \App\Models\CommissionRequestSales::whereBetween('reservation_date', [$monthStart, $monthEnd])
+        // Net TCP from Client Database for selected month — based on date_of_downpayment
+        $netTcp = \App\Models\CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$monthStart, $monthEnd])
+            ->where('client_status', '!=', 'Cancelled')
             ->sum('net_tcp');
 
         // Calculate net sales
