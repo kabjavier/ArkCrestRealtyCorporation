@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class PersonnelContact extends Model
 {
-    protected $fillable = ['name', 'company', 'email', 'phone', 'facebook', 'address'];
+    protected $fillable = ['name', 'company', 'email', 'phone', 'facebook', 'address', 'sort_order'];
 }
