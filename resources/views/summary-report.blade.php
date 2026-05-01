@@ -70,7 +70,7 @@
         @if(!in_array('summary-report.cards', $hiddenSections))
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
 
-            {{-- Card 1: Units + Reservations --}}
+            {{-- Card 1: Units + Gross Sales --}}
             <div class="summary-card">
                 <div class="card-icon" style="background: #10b981;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
@@ -78,11 +78,8 @@
                 <div class="card-content">
                     <div class="card-label">Units</div>
                     <div class="card-value">{{ number_format($units, 0) }}</div>
-                    <div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.7;">
-                        Gross Sales: <strong>&#8369;{{ number_format($grossSalesFromClient, 0) }}</strong><br>
-                        <span style="color:#64748b;">Pending Reservation: <strong>{{ $pendingReservation }}</strong></span><br>
-                        <span style="color:#dc2626;">Cancelled Reservation: <strong>{{ $cancelledReservation }}</strong></span><br>
-                        <span style="color:#1e4575;font-weight:700;">Total Reservation: {{ $totalReservation }}</span>
+                    <div style="font-size:12px;color:#64748b;margin-top:4px;">
+                        Gross Sales: <strong>&#8369;{{ number_format($grossSalesFromClient, 0) }}</strong>
                     </div>
                 </div>
             </div>

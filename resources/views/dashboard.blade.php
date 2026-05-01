@@ -66,12 +66,7 @@
             <div class="metric-label">Monthly Performance</div>
             <div class="metric-value">{{ number_format($units, 0) }} <span style="font-size:14px;font-weight:500;color:#64748b;">units</span></div>
             <div style="font-size:13px;font-weight:700;color:#1e4575;">&#8369;{{ number_format($grossSales, 0) }}</div>
-            <div class="metric-subtitle" style="margin-bottom:4px;">Gross Sales — {{ $currentMonth }} {{ $currentYear }}</div>
-            <div style="font-size:13px;line-height:1.7;">
-                <span style="color:#64748b;">Pending Reservation: <strong>{{ $pendingReservation }}</strong></span><br>
-                <span style="color:#dc2626;">Cancelled Reservation: <strong>{{ $cancelledReservation }}</strong></span><br>
-                <span style="color:#1e4575;font-weight:700;">Total Reservation: {{ $totalReservation }}</span>
-            </div>
+            <div class="metric-subtitle">Gross Sales — {{ $currentMonth }} {{ $currentYear }}</div>
         </div>
     </div>
     <div class="metric-card card-gold">
