@@ -157,133 +157,32 @@
             </form>
         </div>
         <div class="card-body-modern">
-            @if($teams->isEmpty())
-                {{-- No teams: flat top performers --}}
-                @if($topPerformers->isEmpty())
-                    <p style="color:#6b7280;text-align:center;padding:20px 0;">No data for this period.</p>
-                @else
-                @php $maxVal = $topPerformers->max('total_sales') ?: 1; @endphp
-                <div style="display:flex;flex-direction:column;gap:14px">
-                    @foreach($topPerformers as $i => $agent)
-                    @php $pct = round(($agent->total_sales / $maxVal) * 100); @endphp
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-                            <div style="display:flex;align-items:center;gap:10px">
-                                <span style="width:24px;height:24px;background:#1e4575;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">{{ $i+1 }}</span>
-                                <span style="font-weight:600;color:#111827;font-size:14px">{{ $agent->agent_name }}</span>
-                                <span style="font-size:11px;color:#6b7280">{{ $agent->deals }} {{ $agent->deals == 1 ? 'deal' : 'deals' }}</span>
-                            </div>
-                            <div style="text-align:right">
-                                <div style="font-weight:700;color:#1e4575;font-size:14px">₱{{ number_format($agent->total_sales, 2) }}</div>
-                                <div style="font-size:11px;color:#6b7280">Commission: ₱{{ number_format($agent->total_commission, 2) }}</div>
-                            </div>
-                        </div>
-                        <div style="background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden">
-                            <div style="height:100%;width:{{ $pct }}%;background:linear-gradient(90deg,#1e4575,#2563eb);border-radius:999px"></div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-                @endif
+            {{-- Always show flat top performers from client database --}}
+            @if($topPerformers->isEmpty())
+                <p style="color:#6b7280;text-align:center;padding:20px 0;">No sales data for this period.</p>
             @else
-                {{-- Teams configured: cards per team --}}
-                @if($teamPerformance->every(fn($t) => $t['teamTotal'] == 0))
-                    <p style="color:#6b7280;text-align:center;padding:20px 0;">No sales data for this period.</p>
-                @else
-                @php $maxTeam = $teamPerformance->max('teamTotal') ?: 1; @endphp
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;">
-                    @foreach($teamPerformance as $i => $tp)
-                    @php
-                        $quota    = $tp['quota'];
-                        $quotaPct = $quota ? min(100, round(($tp['teamTotal'] / $quota->quota_amount) * 100)) : null;
-                        $palettes = [
-                            ['bg'=>'#0f2a4a','accent'=>'#3b82f6','light'=>'#dbeafe'],
-                            ['bg'=>'#064e3b','accent'=>'#10b981','light'=>'#d1fae5'],
-                            ['bg'=>'#3b0764','accent'=>'#a855f7','light'=>'#f3e8ff'],
-                            ['bg'=>'#451a03','accent'=>'#f59e0b','light'=>'#fef3c7'],
-                            ['bg'=>'#450a0a','accent'=>'#ef4444','light'=>'#fee2e2'],
-                            ['bg'=>'#0c4a6e','accent'=>'#0ea5e9','light'=>'#e0f2fe'],
-                        ];
-                        $p = $palettes[$i % count($palettes)];
-                    @endphp
-                    <div style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.12);background:white;">
-                        {{-- Header --}}
-                        <div style="background:{{ $p['bg'] }};padding:22px 24px;position:relative;overflow:hidden;">
-                            <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
-                            <div style="position:absolute;bottom:-40px;left:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.03);"></div>
-                            <div style="position:relative;">
-                                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-                                    <div>
-                                        <div style="display:inline-block;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:3px 10px;font-size:10px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">
-                                            {{ $tp['team']->team_name ?? 'Team' }}
-                                        </div>
-                                        <div style="font-size:20px;font-weight:800;color:white;line-height:1.1;letter-spacing:-.3px;">{{ $tp['team']->leader_name }}</div>
-                                        @if($tp['team']->sales_manager && $tp['team']->sales_manager !== $tp['team']->leader_name)
-                                        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:3px;">{{ $tp['team']->sales_manager }}</div>
-                                        @endif
-                                    </div>
-                                    <div style="text-align:right;flex-shrink:0;margin-left:12px;">
-                                        <div style="font-size:26px;font-weight:900;color:white;line-height:1;">₱{{ number_format($tp['teamTotal'] / 1000000, 2) }}<span style="font-size:14px;font-weight:600;opacity:.7;">M</span></div>
-                                        <div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:2px;">{{ $tp['teamDeals'] }} {{ $tp['teamDeals'] == 1 ? 'deal' : 'deals' }}</div>
-                                    </div>
-                                </div>
-                                <div style="font-size:10px;color:rgba(255,255,255,.4);margin-bottom:{{ $quota ? '12px' : '0' }};">
-                                    {{ \Carbon\Carbon::parse($dateFrom)->format('M d') }} — {{ \Carbon\Carbon::parse($dateTo)->format('M d, Y') }}
-                                </div>
-                                @if($quota)
-                                <div>
-                                    <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,.6);margin-bottom:5px;">
-                                        <span>Quota ₱{{ number_format($quota->quota_amount / 1000000, 2) }}M</span>
-                                        <span style="font-weight:700;color:{{ $quotaPct >= 100 ? '#86efac' : ($quotaPct >= 70 ? '#fde68a' : '#fca5a5') }}">{{ $quotaPct }}%</span>
-                                    </div>
-                                    <div style="background:rgba(255,255,255,.15);border-radius:999px;height:5px;overflow:hidden;">
-                                        <div style="height:100%;width:{{ $quotaPct }}%;background:{{ $quotaPct >= 100 ? '#86efac' : ($quotaPct >= 70 ? '#fde68a' : '#fca5a5') }};border-radius:999px;"></div>
-                                    </div>
-                                </div>
-                                @endif
-                            </div>
+            @php $maxVal = $topPerformers->max('total_sales') ?: 1; @endphp
+            <div style="display:flex;flex-direction:column;gap:14px">
+                @foreach($topPerformers as $i => $agent)
+                @php $pct = round(($agent->total_sales / $maxVal) * 100); @endphp
+                <div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span style="width:24px;height:24px;background:#1e4575;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">{{ $i+1 }}</span>
+                            <span style="font-weight:600;color:#111827;font-size:14px">{{ $agent->agent_name }}</span>
+                            <span style="font-size:11px;color:#6b7280">{{ $agent->deals }} {{ $agent->deals == 1 ? 'deal' : 'deals' }}</span>
                         </div>
-                        {{-- Stats --}}
-                        <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #f1f5f9;">
-                            <div style="padding:14px 20px;border-right:1px solid #f1f5f9;">
-                                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Net TCP</div>
-                                <div style="font-size:16px;font-weight:800;color:#0f172a;">₱{{ number_format($tp['teamTotal'], 0) }}</div>
-                            </div>
-                            <div style="padding:14px 20px;">
-                                <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Commission</div>
-                                <div style="font-size:16px;font-weight:800;color:#0f172a;">₱{{ number_format($tp['teamCommission'], 0) }}</div>
-                            </div>
-                        </div>
-                        {{-- Agents --}}
-                        <div style="padding:16px 20px;">
-                            @if($tp['agentSales']->isNotEmpty())
-                            <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;">Agents</div>
-                            @php $maxAgent = $tp['agentSales']->max('total_sales') ?: 1; @endphp
-                            @foreach($tp['agentSales'] as $agent)
-                            @php $aPct = round(($agent->total_sales / $maxAgent) * 100); @endphp
-                            <div style="margin-bottom:10px;">
-                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                                    <span style="font-size:12px;font-weight:600;color:#334155;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">{{ $agent->agent_name }}</span>
-                                    <span style="font-size:11px;font-weight:700;color:{{ $p['bg'] }};flex-shrink:0;margin-left:8px;">₱{{ number_format($agent->total_sales / 1000000, 2) }}M</span>
-                                </div>
-                                <div style="background:#f1f5f9;border-radius:999px;height:4px;overflow:hidden;">
-                                    <div style="height:100%;width:{{ $aPct }}%;background:{{ $p['accent'] }};border-radius:999px;"></div>
-                                </div>
-                            </div>
-                            @endforeach
-                            @else
-                            <div style="text-align:center;padding:12px 0;color:#94a3b8;font-size:12px;">No sales data for this period.</div>
-                            @endif
-                        </div>
-                        {{-- Footer --}}
-                        <div style="padding:10px 20px 14px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9;">
-                            <span style="font-size:11px;color:#94a3b8;">{{ $tp['team']->agents->count() + 1 }} members</span>
-                            <span style="font-size:11px;font-weight:700;background:{{ $p['light'] }};color:{{ $p['bg'] }};padding:3px 10px;border-radius:20px;">Rank #{{ $i + 1 }}</span>
+                        <div style="text-align:right">
+                            <div style="font-weight:700;color:#1e4575;font-size:14px">₱{{ number_format($agent->total_sales, 2) }}</div>
+                            <div style="font-size:11px;color:#6b7280">Commission: ₱{{ number_format($agent->total_commission, 2) }}</div>
                         </div>
                     </div>
-                    @endforeach
+                    <div style="background:#f3f4f6;border-radius:999px;height:10px;overflow:hidden">
+                        <div style="height:100%;width:{{ $pct }}%;background:linear-gradient(90deg,#1e4575,#2563eb);border-radius:999px"></div>
+                    </div>
                 </div>
-                @endif
+                @endforeach
+            </div>
             @endif
         </div>
     </div>

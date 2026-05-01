@@ -15,7 +15,10 @@ class SalesMarketingController extends Controller
         $dateFrom = $request->input('date_from', date('Y-m-01'));
         $dateTo   = $request->input('date_to',   date('Y-m-t'));
 
-        $totalNetTcp  = CommissionRequestSales::whereBetween('date_requested', [$dateFrom, $dateTo])->sum('net_tcp');
+        $totalNetTcp  = CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$dateFrom, $dateTo])
+            ->where('client_status', '!=', 'Cancelled')
+            ->sum('net_tcp');
         $totalClients = CommissionRequestSales::whereBetween('date_requested', [$dateFrom, $dateTo])->distinct('client_name')->count('client_name');
         $totalRecords = CommissionRequestSales::whereBetween('date_requested', [$dateFrom, $dateTo])->count();
 
@@ -109,7 +112,7 @@ class SalesMarketingController extends Controller
             $merged[$key]['deals']              += $row->deals;
         }
         usort($merged, fn($a, $b) => $b['total_sales'] <=> $a['total_sales']);
-        $topPerformers = collect(array_slice($merged, 0, 5))->map(fn($r) => (object)$r);
+        $topPerformers = collect($merged)->map(fn($r) => (object)$r);
 
         // Today's summary for banner
         $today = \Carbon\Carbon::today()->toDateString();
