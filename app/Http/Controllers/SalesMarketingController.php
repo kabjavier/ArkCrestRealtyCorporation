@@ -105,12 +105,21 @@ class SalesMarketingController extends Controller
         foreach ($rawPerformers as $row) {
             $key = preg_replace('/[^A-Z0-9 ]/', '', strtoupper(preg_replace('/\s+/', ' ', trim($row->agent_name))));
             if (!isset($merged[$key])) {
-                $merged[$key] = ['agent_name' => trim($row->agent_name), 'total_sales' => 0, 'total_commission' => 0, 'deals' => 0];
+                $merged[$key] = ['agent_name' => trim($row->agent_name), 'total_sales' => 0, 'total_commission' => 0, 'deals' => 0, 'position' => null];
             }
             $merged[$key]['total_sales']       += $row->total_sales;
             $merged[$key]['total_commission']   += $row->total_commission;
             $merged[$key]['deals']              += $row->deals;
         }
+
+        // Look up position from users table
+        $agentNames = collect($merged)->pluck('agent_name');
+        $userPositions = \App\Models\User::whereIn('name', $agentNames)->pluck('position', 'name');
+        foreach ($merged as $key => &$agent) {
+            $agent['position'] = $userPositions[$agent['agent_name']] ?? null;
+        }
+        unset($agent);
+
         usort($merged, fn($a, $b) => $b['total_sales'] <=> $a['total_sales']);
         $topPerformers = collect($merged)->map(fn($r) => (object)$r);
 
