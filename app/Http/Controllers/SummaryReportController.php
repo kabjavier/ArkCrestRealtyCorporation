@@ -67,8 +67,38 @@ class SummaryReportController extends Controller
             $totalExpenses += $expenses;
         }
         
+        // Units, Pending, Cancelled, Total Reservation for selected month (from Client Database)
+        $monthStart = Carbon::create($selectedYear, $selectedMonth, 1)->startOfMonth()->toDateString();
+        $monthEnd   = Carbon::create($selectedYear, $selectedMonth, 1)->endOfMonth()->toDateString();
+
+        $units = \App\Models\CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$monthStart, $monthEnd])
+            ->where('client_status', '!=', 'Cancelled')
+            ->whereNotNull('block_lot_number')
+            ->distinct('block_lot_number')
+            ->count('block_lot_number');
+
+        $grossSalesFromClient = \App\Models\CommissionRequestSales::whereNotNull('date_of_downpayment')
+            ->whereBetween('date_of_downpayment', [$monthStart, $monthEnd])
+            ->where('client_status', '!=', 'Cancelled')
+            ->sum('net_tcp');
+
+        $pendingReservation = \App\Models\CommissionRequestSales::whereBetween('reservation_date', [$monthStart, $monthEnd])
+            ->where(function($q) { $q->whereNull('downpayment_status')->orWhereNotIn('downpayment_status', ['Paid', 'Spot Paid']); })
+            ->where(function($q) { $q->whereNull('client_status')->orWhere('client_status', '!=', 'Cancelled'); })
+            ->count();
+
+        $cancelledReservation = \App\Models\CommissionRequestSales::whereBetween('reservation_date', [$monthStart, $monthEnd])
+            ->where('client_status', 'Cancelled')->count();
+
+        $totalReservation = $units + $pendingReservation - $cancelledReservation;
+
+        // Net TCP from Client Database for selected month
+        $netTcp = \App\Models\CommissionRequestSales::whereBetween('reservation_date', [$monthStart, $monthEnd])
+            ->sum('net_tcp');
+
         // Calculate net sales
-        $netSales = $summaryReport->gross_sales - $totalExpenses;
+        $netSales = $grossSalesFromClient - $totalExpenses;
         
         return view('summary-report', compact(
             'availablePeriods',
@@ -79,7 +109,13 @@ class SummaryReportController extends Controller
             'departments',
             'departmentExpenses',
             'totalExpenses',
-            'netSales'
+            'netSales',
+            'units',
+            'grossSalesFromClient',
+            'pendingReservation',
+            'cancelledReservation',
+            'totalReservation',
+            'netTcp'
         ));
     }
     

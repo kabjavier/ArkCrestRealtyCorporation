@@ -69,47 +69,57 @@
         <!-- Summary Cards -->
         @if(!in_array('summary-report.cards', $hiddenSections))
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
+
+            {{-- Card 1: Units + Reservations --}}
+            <div class="summary-card">
+                <div class="card-icon" style="background: #10b981;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <div class="card-content">
+                    <div class="card-label">Units</div>
+                    <div class="card-value">{{ number_format($units, 0) }}</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:4px;line-height:1.7;">
+                        Gross Sales: <strong>&#8369;{{ number_format($grossSalesFromClient, 0) }}</strong><br>
+                        <span style="color:#64748b;">Pending Reservation: <strong>{{ $pendingReservation }}</strong></span><br>
+                        <span style="color:#dc2626;">Cancelled Reservation: <strong>{{ $cancelledReservation }}</strong></span><br>
+                        <span style="color:#1e4575;font-weight:700;">Total Reservation: {{ $totalReservation }}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Card 2: Total Expenses --}}
             <div class="summary-card">
                 <div class="card-icon" style="background: #3b82f6;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div class="card-content">
                     <div class="card-label">Total Expenses</div>
-                    <div class="card-value" id="card_total_expenses"><span style="font-size: 20px; margin-right: 4px;">₱</span>{{ number_format($totalExpenses, 2) }}</div>
+                    <div class="card-value" id="card_total_expenses"><span style="font-size:20px;margin-right:4px;">&#8369;</span>{{ number_format($totalExpenses, 2) }}</div>
                 </div>
             </div>
 
+            {{-- Card 3: Net TCP --}}
             <div class="summary-card">
-                <div class="card-icon" style="background: #10b981;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                    </svg>
+                <div class="card-icon" style="background: #8b5cf6;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 </div>
-                <div class="card-content" style="display: flex; flex-direction: column; gap: 15px;">
-                    <div>
-                        <div class="card-label">Units</div>
-                        <div class="card-value" id="card_units">{{ number_format($summaryReport->units, 0) }}</div>
-                    </div>
-                    <div>
-                        <div class="card-label">Gross Sales</div>
-                        <div class="card-value" id="card_gross_sales"><span style="font-size: 20px; margin-right: 4px;">₱</span>{{ number_format($summaryReport->gross_sales, 2) }}</div>
-                    </div>
+                <div class="card-content">
+                    <div class="card-label">Net TCP</div>
+                    <div class="card-value"><span style="font-size:20px;margin-right:4px;">&#8369;</span>{{ number_format($netTcp, 2) }}</div>
                 </div>
             </div>
 
+            {{-- Card 4: Net Sales --}}
             <div class="summary-card">
                 <div class="card-icon" style="background: #f59e0b;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                    </svg>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                 </div>
                 <div class="card-content">
                     <div class="card-label">Net Sales</div>
-                    <div class="card-value" id="card_net_sales"><span style="font-size: 20px; margin-right: 4px;">₱</span>{{ number_format($netSales, 2) }}</div>
+                    <div class="card-value" id="card_net_sales"><span style="font-size:20px;margin-right:4px;">&#8369;</span>{{ number_format($netSales, 2) }}</div>
                 </div>
             </div>
+
         </div>
         @endif
 
