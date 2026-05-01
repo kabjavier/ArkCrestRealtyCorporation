@@ -158,13 +158,17 @@
                     <tr class="editable-row header-row">
                         <td class="label-cell">Units</td>
                         <td class="value-cell">
-                            <input type="text" id="units" class="form-control-inline" value="{{ $summaryReport->units ?: $units }}" oninput="recalcNetSales()">
+                            <input type="text" id="units" class="form-control-inline"
+                                value="{{ $summaryReport->exists && $summaryReport->units > 0 ? $summaryReport->units : $units }}"
+                                oninput="recalcNetSales()">
                         </td>
                     </tr>
                     <tr class="editable-row header-row">
                         <td class="label-cell">Gross Sales</td>
                         <td class="value-cell">
-                            <input type="text" id="gross_sales" class="form-control-inline" value="{{ $summaryReport->gross_sales ?: $grossSalesFromClient }}" oninput="recalcNetSales()">
+                            <input type="text" id="gross_sales" class="form-control-inline"
+                                value="{{ $summaryReport->exists && $summaryReport->gross_sales > 0 ? $summaryReport->gross_sales : $grossSalesFromClient }}"
+                                oninput="recalcNetSales()">
                         </td>
                     </tr>
                     <tr class="divider-row">

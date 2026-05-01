@@ -99,8 +99,11 @@ class SummaryReportController extends Controller
             ->where('client_status', '!=', 'Cancelled')
             ->sum('net_tcp');
 
-        // Calculate net sales
-        $netSales = $grossSalesFromClient - $totalExpenses;
+        // Calculate net sales from the editable gross_sales value
+        $editableGrossSales = ($summaryReport->exists && $summaryReport->gross_sales > 0)
+            ? $summaryReport->gross_sales
+            : $grossSalesFromClient;
+        $netSales = $editableGrossSales - $totalExpenses;
         
         return view('summary-report', compact(
             'availablePeriods',
