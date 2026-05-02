@@ -1290,8 +1290,13 @@ function computeAddNetTCP() {
     const priceSqm   = parseFloat(document.getElementById('cm_add_price_sqm').value) || 0;
     const lotArea    = parseFloat(document.getElementById('cm_add_lot_area').value) || 0;
     const tcp        = priceSqm * lotArea;
-    const discVal    = parseFloat(document.getElementById('cm_add_discount').value) || 0;
     const discType   = document.getElementById('cm_add_discount_type')?.value || 'percent';
+    const input      = document.getElementById('cm_add_discount');
+    let discVal      = parseFloat(input.value) || 0;
+    if (discType === 'percent') {
+        if (discVal > 100) { discVal = 100; input.value = 100; }
+        if (discVal < 0)   { discVal = 0;   input.value = 0; }
+    }
     const discAmount = discType === 'percent' ? (tcp * discVal / 100) : discVal;
     const netTcp     = tcp - discAmount;
     document.getElementById('cm_add_net_tcp').value = netTcp > 0 ? netTcp.toFixed(2) : '';
