@@ -163,15 +163,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script>
     (function() {
-        const teamData = @json($teamPerformance->map(function($t) {
-            return [
-                'team'    => $t['team']->team_name,
-                'total'   => $t['teamTotal'],
-                'members' => collect($t['agentSales'])->map(function($a) {
-                    return ['name' => $a->agent_name, 'sales' => $a->total_sales];
-                })->values(),
-            ];
-        }));
+        const teamData = {!! json_encode($chartTeamData) !!};
 
         const colors = ['#1e4575','#A37929','#2563eb','#16a34a','#dc2626','#7c3aed','#0891b2','#d97706'];
 

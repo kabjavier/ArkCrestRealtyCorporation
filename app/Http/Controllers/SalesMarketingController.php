@@ -131,11 +131,23 @@ class SalesMarketingController extends Controller
             $q->whereDate('reservation_date', $today)->orWhereDate('date_of_downpayment', $today);
         })->count();
 
+        // Chart data for team performance
+        $chartTeamData = $teamPerformance->map(function($t) {
+            return [
+                'team'    => $t['team']->team_name,
+                'total'   => (float) $t['teamTotal'],
+                'members' => collect($t['agentSales'])->map(function($a) {
+                    return ['name' => $a->agent_name, 'sales' => (float) $a->total_sales];
+                })->values()->toArray(),
+            ];
+        })->values()->toArray();
+
         return view('sales-marketing', compact(
             'totalNetTcp', 'totalClients', 'totalRecords',
             'topPerformers', 'teamPerformance', 'dateFrom', 'dateTo', 'teams',
             'todayTrips', 'todayReleases', 'todayEvents',
-            'units', 'grossSalesFromClient', 'pendingReservation', 'cancelledReservation', 'totalReservation'
+            'units', 'grossSalesFromClient', 'pendingReservation', 'cancelledReservation', 'totalReservation',
+            'chartTeamData'
         ));
     }
 
