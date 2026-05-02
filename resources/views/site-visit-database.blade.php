@@ -3,7 +3,7 @@
 @section('content')
 <style>
 /* Header */
-.svd-header{background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25)}
+.svd-header{background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:36px 40px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25)}
 .svd-eyebrow{font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
 .svd-title{font-size:24px;font-weight:700;color:white;margin:0 0 8px;position:relative;z-index:2}
 .svd-subtitle{font-size:14px;color:rgba(255,255,255,.75);margin:0;position:relative;z-index:2;display:flex;align-items:center;gap:5px}

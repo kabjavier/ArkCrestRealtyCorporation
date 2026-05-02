@@ -383,7 +383,7 @@
     .add-commission-section {
         background: white;
         border-radius: 12px;
-        padding: 28px 32px;
+        padding: 36px 40px;
         margin-bottom: 30px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
         border: 2px solid #1e4575;
@@ -485,7 +485,7 @@
     .welcome-banner {
         background: linear-gradient(135deg, #1e4575 0%, #2563eb 60%, #1e4575 100%);
         border-radius: 20px;
-        padding: 28px 32px;
+        padding: 36px 40px;
         margin-bottom: 24px;
         position: relative;
         overflow: hidden;
