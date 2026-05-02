@@ -318,11 +318,11 @@
                         <td>{{ $request->project_name ?? '-' }}</td>
                         <td>{{ $request->property_details ?? '-' }}</td>
                         @if($isAdmin)
-                        <td>{{ $request->price_sqm ? 'Γé▒'.number_format($request->price_sqm, 2) : '-' }}</td>
+                        <td>{{ $request->price_sqm ? '₱'.number_format($request->price_sqm, 2) : '-' }}</td>
                         <td>{{ $request->lot_area ? number_format($request->lot_area, 2).' sqm' : '-' }}</td>
-                        <td>{{ $request->discount ? 'Γé▒'.number_format($request->discount, 2) : '-' }}</td>
+                        <td>{{ $request->discount ? '₱'.number_format($request->discount, 2) : '-' }}</td>
                         @endif
-                        <td>{{ $request->net_tcp ? 'Γé▒'.number_format($request->net_tcp, 2) : '-' }}</td>
+                        <td>{{ $request->net_tcp ? '₱'.number_format($request->net_tcp, 2) : '-' }}</td>
                         <td>{{ $request->terms_of_payment ?? '-' }}</td>
                         <td>{{ $request->mode_of_payment ?? '-' }}</td>
                         <td>{{ $request->remarks ? \Illuminate\Support\Str::limit($request->remarks, 30) : '-' }}</td>
@@ -331,11 +331,11 @@
                         <td>{{ $request->number_of_units ?? '-' }}</td>
                         @if($isAdmin)
                         <td>{{ $request->commission_percent ? $request->commission_percent.'%' : '-' }}</td>
-                        <td>{{ $request->commission ? 'Γé▒'.number_format($request->commission, 2) : '-' }}</td>
+                        <td>{{ $request->commission ? '₱'.number_format($request->commission, 2) : '-' }}</td>
                         @endif
                         <td>{{ $request->date_released ? $request->date_released->format('M d, Y') : '-' }}</td>
                         <td>{{ $request->payment_type ?? '-' }}</td>
-                        <td>{{ $request->value_of_payment_terms ? 'Γé▒'.number_format($request->value_of_payment_terms, 2) : '-' }}</td>
+                        <td>{{ $request->value_of_payment_terms ? '₱'.number_format($request->value_of_payment_terms, 2) : '-' }}</td>
                         <td>
                             <span class="status-badge 
                                 @if($request->status == 'Released') status-released
@@ -1189,7 +1189,7 @@ function viewCommission(id) {
         .then(r => r.json())
         .then(data => {
             const fmt = (v) => v ?? '-';
-            const fmtMoney = (v) => v ? 'Γé▒' + parseFloat(v).toLocaleString('en-PH', {minimumFractionDigits:2}) : '-';
+            const fmtMoney = (v) => v ? '₱' + parseFloat(v).toLocaleString('en-PH', {minimumFractionDigits:2}) : '-';
             const fmtDate = (v) => v ? new Date(v).toLocaleDateString('en-US', {month:'short', day:'2-digit', year:'numeric'}) : '-';
             document.getElementById('cm_view_client_name').textContent = fmt(data.client_name);
             document.getElementById('cm_view_reservation_date').textContent = fmtDate(data.reservation_date);
