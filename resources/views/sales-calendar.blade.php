@@ -235,11 +235,11 @@
 <div class="sc-page">
 
     {{-- Top Bar --}}
-    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:36px 40px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:28px 32px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <div style="position:relative;z-index:2;">
             <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Sales & Marketing</div>
-            <h1 style="font-size:28px;font-weight:700;color:white;margin:0 0 8px;">Calendar</h1>
-            <p style="font-size:14px;color:rgba(255,255,255,.75);margin:0;">{{ $monthNames[$month] }} {{ $year }} &bull; All sales events at a glance</p>
+            <h1 style="font-size:24px;font-weight:700;color:white;margin:0 0 6px;">Calendar</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0;">{{ $monthNames[$month] }} {{ $year }} &bull; All sales events at a glance</p>
         </div>
         <div class="sc-controls" style="position:relative;z-index:2;">
             <form method="GET" action="{{ route('sales-calendar') }}" style="display:flex;align-items:center;gap:6px;">

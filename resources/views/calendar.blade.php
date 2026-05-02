@@ -1,4 +1,4 @@
-ï»¿@extends('layouts.dashboard')
+@extends('layouts.dashboard')
 
 @section('content')
 @php
@@ -137,11 +137,11 @@
 
 <div class="cal-page">
     {{-- Top Bar --}}
-    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:36px 40px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:28px 32px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <div style="position:relative;z-index:2;">
             <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Finance</div>
-            <h1 style="font-size:28px;font-weight:700;color:white;margin:0 0 8px;">Calendar</h1>
-            <p style="font-size:14px;color:rgba(255,255,255,.75);margin:0;">Commission release schedule &bull; {{ $monthNames[$month] }} {{ $year }}</p>
+            <h1 style="font-size:24px;font-weight:700;color:white;margin:0 0 6px;">Calendar</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0;">Commission release schedule &bull; {{ $monthNames[$month] }} {{ $year }}</p>
         </div>
         <div class="cal-controls" style="position:relative;z-index:2;">
             <form method="GET" action="{{ route('calendar') }}" style="display:flex;align-items:center;gap:6px;">
@@ -189,13 +189,13 @@
             <tbody>
             @foreach($releases as $r)
             <tr style="border-bottom:1px solid #f1f5f9;cursor:pointer;" onclick="showEventDetail('{{ $r->_type }}', {{ $r->id }})" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
-                <td style="padding:11px 16px;font-size:13px;font-weight:600;color:#059669;white-space:nowrap;">{{ $r->date_released ? $r->date_released->format('M d, Y') : 'â€”' }}</td>
-                <td style="padding:11px 16px;font-size:13px;color:#0f172a;font-weight:600;">{{ $r->agent_name ?? 'â€”' }}</td>
-                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->client_name ?? 'â€”' }}</td>
-                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->project_name ?? 'â€”' }}</td>
-                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->net_tcp ? 'â‚±'.number_format($r->net_tcp,2) : 'â€”' }}</td>
-                <td style="padding:11px 16px;font-size:13px;font-weight:700;color:#059669;">{{ $r->commission ? 'â‚±'.number_format($r->commission,2) : 'â€”' }}</td>
-                <td style="padding:11px 16px;"><span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">{{ $r->status ?? 'â€”' }}</span></td>
+                <td style="padding:11px 16px;font-size:13px;font-weight:600;color:#059669;white-space:nowrap;">{{ $r->date_released ? $r->date_released->format('M d, Y') : '—' }}</td>
+                <td style="padding:11px 16px;font-size:13px;color:#0f172a;font-weight:600;">{{ $r->agent_name ?? '—' }}</td>
+                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->client_name ?? '—' }}</td>
+                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->project_name ?? '—' }}</td>
+                <td style="padding:11px 16px;font-size:13px;color:#374151;">{{ $r->net_tcp ? '?'.number_format($r->net_tcp,2) : '—' }}</td>
+                <td style="padding:11px 16px;font-size:13px;font-weight:700;color:#059669;">{{ $r->commission ? '?'.number_format($r->commission,2) : '—' }}</td>
+                <td style="padding:11px 16px;"><span style="background:#dcfce7;color:#166534;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700;">{{ $r->status ?? '—' }}</span></td>
             </tr>
             @endforeach
             </tbody>
@@ -254,7 +254,7 @@
         <div style="background:linear-gradient(135deg,#1e4575,#2563eb);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;">
             <div>
                 <div style="color:rgba(255,255,255,.65);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;">Release Details</div>
-                <div style="color:white;font-size:16px;font-weight:700;" id="calModalTitle">â€”</div>
+                <div style="color:white;font-size:16px;font-weight:700;" id="calModalTitle">—</div>
             </div>
             <button onclick="document.getElementById('calEventModal').style.display='none'" style="background:rgba(255,255,255,.15);border:none;color:white;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:16px;line-height:1;">&times;</button>
         </div>
@@ -267,18 +267,18 @@ const calEvents = @json($releases->values());
 function showEventDetail(type, id) {
     const ev = calEvents.find(e => e.id == id && e._type == type);
     if (!ev) return;
-    const fmt = v => v ? '\u20B1' + parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:2}) : 'â€”';
-    const fmtDate = v => { if(!v) return 'â€”'; try { return new Date(v).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); } catch(e){ return v; } };
-    document.getElementById('calModalTitle').textContent = ev.client_name || 'â€”';
+    const fmt = v => v ? '\u20B1' + parseFloat(v).toLocaleString('en-US',{minimumFractionDigits:2}) : '—';
+    const fmtDate = v => { if(!v) return '—'; try { return new Date(v).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}); } catch(e){ return v; } };
+    document.getElementById('calModalTitle').textContent = ev.client_name || '—';
     document.getElementById('calEventBody').innerHTML = `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             ${[
                 ['Date Released', fmtDate(ev.date_released), false],
-                ['Agent', ev.agent_name||'â€”', false],
-                ['Project', ev.project_name||'â€”', false],
+                ['Agent', ev.agent_name||'—', false],
+                ['Project', ev.project_name||'—', false],
                 ['Net TCP', fmt(ev.net_tcp), false],
                 ['Commission', fmt(ev.commission), true],
-                ['Status', ev.status||'â€”', false],
+                ['Status', ev.status||'—', false],
             ].map(([lbl,val,highlight]) => `
                 <div style="background:#f8fafc;border-radius:8px;padding:10px 12px;border:1px solid #f1f5f9;">
                     <div style="font-size:9px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">${lbl}</div>

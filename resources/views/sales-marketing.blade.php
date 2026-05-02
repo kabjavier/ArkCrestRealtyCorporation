@@ -4,6 +4,7 @@
 <!-- Welcome Banner -->
 <div class="welcome-banner">
     <div class="welcome-content">
+        <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Sales & Marketing</div>
         <h1 class="welcome-title">Happy ArkCrest Morning, {{ auth()->user()->preferred_address ? auth()->user()->preferred_address.' '.auth()->user()->name : auth()->user()->name }}! 🎯</h1>
         <p class="welcome-subtitle">
             <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +34,7 @@
     .welcome-banner {
         background: linear-gradient(135deg, #1e4575 0%, #2563eb 60%, #1e4575 100%);
         border-radius: 20px;
-        padding: 36px 40px;
+        padding: 28px 32px;
         margin-bottom: 28px;
         position: relative;
         overflow: hidden;

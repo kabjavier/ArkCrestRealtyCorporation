@@ -485,8 +485,8 @@
     .welcome-banner {
         background: linear-gradient(135deg, #1e4575 0%, #2563eb 60%, #1e4575 100%);
         border-radius: 20px;
-        padding: 36px 40px;
-        margin-bottom: 28px;
+        padding: 28px 32px;
+        margin-bottom: 24px;
         position: relative;
         overflow: hidden;
         box-shadow: 0 8px 32px rgba(30,69,117,.25);
