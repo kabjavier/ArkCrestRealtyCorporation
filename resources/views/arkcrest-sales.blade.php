@@ -59,9 +59,9 @@
             <div style="font-size:12px;color:#64748b;margin-top:4px;">transactions this month</div>
         </div>
         <div class="arc-card">
-            <div class="arc-card-label">Total Released Amount</div>
-            <div class="arc-card-value" style="color:#1e4575;">₱{{ number_format($totalReleasedCommission, 2) }}</div>
-            <div style="font-size:12px;color:#64748b;margin-top:4px;">agent commissions released</div>
+            <div class="arc-card-label">Total Net TCP</div>
+            <div class="arc-card-value" style="color:#1e4575;">₱{{ number_format($totalNetTcp, 2) }}</div>
+            <div style="font-size:12px;color:#64748b;margin-top:4px;">from released commissions</div>
         </div>
         <div class="arc-card">
             <div class="arc-card-label">ARC Gross Sales</div>
