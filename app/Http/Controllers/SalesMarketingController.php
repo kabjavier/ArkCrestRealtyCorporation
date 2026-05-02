@@ -356,14 +356,14 @@ class SalesMarketingController extends Controller
             $dpStatus = $record->downpayment_status;
             $isFullyPaid = $dpStatus === 'Spot Paid' || $dpStatus === 'Paid';
 
-            // Also check installments if any
+            // For installment terms: at least 1 term paid is enough to allow Done
             $installments = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)->get();
             if ($installments->count() > 0) {
-                $isFullyPaid = $installments->every(fn($i) => $i->is_paid);
+                $isFullyPaid = $installments->contains(fn($i) => $i->is_paid);
             }
 
             if (!$isFullyPaid) {
-                return back()->with('error', 'Cannot set to Done — downpayment is not fully paid yet.');
+                return back()->with('error', 'Cannot set to Done — at least 1 downpayment term must be paid first.');
             }
         }
 
