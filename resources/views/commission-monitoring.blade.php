@@ -11,7 +11,7 @@
                 <svg class="icon-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
-                Track and monitor all commission requests ΓÇö {{ date('F Y') }}
+                Track and monitor all commission requests — {{ date('F Y') }}
             </p>
         </div>
         <div class="welcome-decoration">
@@ -76,7 +76,7 @@
         @endif
         @if($errors->any())
         <div style="background:#fee2e2;color:#dc2626;padding:12px 16px;border-radius:8px;margin-bottom:12px;font-size:13px;">
-            @foreach($errors->all() as $error)<div>ΓÇó {{ $error }}</div>@endforeach
+            @foreach($errors->all() as $error)<div>• {{ $error }}</div>@endforeach
         </div>
         @endif
         <form id="cmAddForm" class="commission-form" action="{{ route('commission-monitoring.store') }}" method="POST">
@@ -140,7 +140,7 @@
                     <div class="form-group">
                         <label>COMMISSION TERMS</label>
                         <select id="cm_add_payment_type" name="payment_type" onchange="computeValueOfPaymentTerms()">
-                            <option value="">ΓÇö Select ΓÇö</option>
+                            <option value="">— Select —</option>
                             <option value="Full Payment">Full Payment</option>
                             <option value="2 Months Commission">2 Months Commission</option>
                             <option value="3 Months Commission">3 Months Commission</option>
