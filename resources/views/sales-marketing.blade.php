@@ -154,14 +154,14 @@
         </div>
 
         {{-- Member Charts --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
             <div>
                 <div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:10px;" id="memberBarLabel">Members</div>
-                <canvas id="memberBarChart" height="220"></canvas>
+                <canvas id="memberBarChart" height="140"></canvas>
             </div>
             <div>
                 <div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:10px;" id="memberPieLabel">Share</div>
-                <canvas id="memberPieChart" height="220"></canvas>
+                <canvas id="memberPieChart" height="140"></canvas>
             </div>
         </div>
     </div>
@@ -203,8 +203,15 @@
                 type: 'doughnut',
                 data: { labels: labels, datasets: [{ data: values, backgroundColor: colors }] },
                 options: { responsive:true,
-                    plugins:{ legend:{ position:'bottom' },
-                        tooltip:{ callbacks:{ label: function(ctx) { return ' ₱'+Number(ctx.raw).toLocaleString(); } } } } }
+                    plugins:{
+                        legend:{ position:'bottom', labels:{ font:{ size:11 } } },
+                        tooltip:{ callbacks:{ label: function(ctx) {
+                            var total = ctx.dataset.data.reduce(function(a,b){return a+b;},0);
+                            var pct = total > 0 ? ((ctx.raw/total)*100).toFixed(1) : 0;
+                            return ' ' + ctx.label + ': ' + pct + '%';
+                        }}}
+                    }
+                }
             });
         }
 
