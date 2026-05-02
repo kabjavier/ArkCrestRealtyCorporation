@@ -135,7 +135,8 @@
                         <select id="cm_add_payment_type" name="payment_type" onchange="computeValueOfPaymentTerms()">
                             <option value="">— Select —</option>
                             <option value="Full Payment">Full Payment</option>
-                            <option value="Partial Payment">Partial Payment</option>
+                            <option value="2 Months Commission">2 Months Commission</option>
+                            <option value="3 Months Commission">3 Months Commission</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1268,17 +1269,33 @@ function computeAddNetTCP() {
     computeValueOfPaymentTerms();
 }
 function computeValueOfPaymentTerms() {
-    const netTcp   = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
-    const type     = document.getElementById('cm_add_payment_type')?.value || '';
-    // Use actual commission value if set, else compute from %
+    const netTcp     = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
+    const type       = document.getElementById('cm_add_payment_type')?.value || '';
     const commHidden = parseFloat(document.getElementById('cm_add_commission')?.value) || 0;
-    const commPct  = parseFloat(document.getElementById('cm_add_commission_percent')?.value) || 0;
-    const commVal  = commHidden > 0 ? commHidden : netTcp * (commPct / 100);
-    let result     = 0;
-    if (type === 'Full Payment')    result = commVal;
-    if (type === 'Partial Payment') result = commVal / 3;
+    const commPct    = parseFloat(document.getElementById('cm_add_commission_percent')?.value) || 0;
+    const commVal    = commHidden > 0 ? commHidden : netTcp * (commPct / 100);
+    let result = 0;
+    if (type === 'Full Payment')         result = commVal;
+    if (type === '2 Months Commission')  result = commVal / 2;
+    if (type === '3 Months Commission')  result = commVal / 3;
     document.getElementById('cm_add_value_of_payment_terms').value = result > 0 ? result.toFixed(2) : '';
     document.getElementById('cm_add_vopt_display').value = result > 0 ? fmtComma(result) : '';
+}
+
+function computeEditValueOfPaymentTerms() {
+    const netTcp     = parseFloat(document.getElementById('cm_edit_net_tcp')?.value) || 0;
+    const type       = document.getElementById('cm_edit_payment_type')?.value || '';
+    const commHidden = parseFloat(document.getElementById('cm_edit_commission')?.value) || 0;
+    const commPct    = parseFloat(document.getElementById('cm_edit_commission_percent')?.value) || 0;
+    const commVal    = commHidden > 0 ? commHidden : netTcp * (commPct / 100);
+    let result = 0;
+    if (type === 'Full Payment')         result = commVal;
+    if (type === '2 Months Commission')  result = commVal / 2;
+    if (type === '3 Months Commission')  result = commVal / 3;
+    const vEl = document.getElementById('cm_edit_value_of_payment_terms');
+    const dEl = document.getElementById('cm_edit_vopt_display');
+    if (vEl) vEl.value = result > 0 ? result.toFixed(2) : '';
+    if (dEl) dEl.value = result > 0 ? fmtComma(result) : '';
 }
 function computeAddCommission() {
     const netTcp = parseFloat(document.getElementById('cm_add_net_tcp').value) || 0;
