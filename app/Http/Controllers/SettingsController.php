@@ -188,7 +188,7 @@ class SettingsController extends Controller
         if (!auth()->user()->isAdmin()) abort(403);
         $request->validate([
             'team_name'     => 'required|string|max:255',
-            'sales_manager' => 'required|string|max:255',
+            'sales_manager' => 'nullable|string|max:255',
             'leader_name'   => 'nullable|string|max:255',
         ]);
         \App\Models\SalesTeam::create([

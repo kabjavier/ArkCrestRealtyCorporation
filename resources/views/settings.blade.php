@@ -1356,7 +1356,7 @@
 
             <div class="st-form-group"><label class="st-label">Team Name</label><input class="st-input" type="text" name="team_name" required></div>
 
-            <div class="st-form-group"><label class="st-label">Sales Manager</label><input class="st-input" type="text" name="sales_manager" required></div>
+            <div class="st-form-group"><label class="st-label">Sales Manager <span style="font-weight:400;color:#94a3b8;font-size:11px">(optional)</span></label><input class="st-input" type="text" name="sales_manager"></div>
 
             <div class="st-form-group"><label class="st-label">Team Leader</label><input class="st-input" type="text" name="leader_name"></div>
 
