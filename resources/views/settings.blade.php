@@ -464,13 +464,6 @@
       </button>
       @endif
 
-      @if($isAdmin)
-      <button class="st-nav-btn" id="nav-rejected-trippings" onclick="showPanel('rejected-trippings')">
-        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Rejected Trippings
-      </button>
-      @endif
-
       @if($canSeeS('settings.employee'))
       <button class="st-nav-btn" id="nav-employee-directory" onclick="showPanel('employee-directory')">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -1539,50 +1532,6 @@
         @empty
 
         <div class="st-empty">No locked periods.</div>
-
-        @endforelse
-
-      </div></div>
-
-    </div>
-
-    @endif
-
-    @if($isAdmin)
-
-    {{-- REJECTED TRIPPINGS PANEL --}}
-
-    <div class="st-panel" id="panel-rejected-trippings">
-
-      <div class="st-page-header"><div class="st-page-title">Rejected Trippings</div><div class="st-page-sub">Archived rejected site visit requests</div></div>
-
-      <div class="st-card"><div class="st-card-body">
-
-        @forelse($rejectedTrippings as $r)
-
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8fafc;gap:12px;flex-wrap:wrap;">
-
-          <div>
-
-            <div style="font-size:13px;font-weight:600;color:#0f172a;">{{ $r->client_name }}</div>
-
-            <div style="font-size:12px;color:#64748b;">{{ $r->property_name }} &bull; Agent: {{ $r->agent_name }}</div>
-
-            <div style="font-size:11px;color:#94a3b8;">{{ $r->tripping_date ? $r->tripping_date->format('M d, Y') : '—' }}</div>
-
-          </div>
-
-          <form method="POST" action="{{ route('site-visit-database.destroy', $r->id) }}" onsubmit="return confirm('Delete permanently?')">@csrf @method('DELETE')
-
-            <button type="submit" class="st-btn st-btn-danger st-btn-sm">Delete</button>
-
-          </form>
-
-        </div>
-
-        @empty
-
-        <div class="st-empty">No rejected trippings.</div>
 
         @endforelse
 
