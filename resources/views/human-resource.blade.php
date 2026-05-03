@@ -45,27 +45,4 @@
 
 </div>
 
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;">
-    <a href="{{ route('settings') }}?panel=employee" style="background:white;border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-decoration:none;border:2px solid #e2e8f0;transition:border-color .2s;">
-        <div style="width:44px;height:44px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="22" height="22" fill="none" stroke="#1e4575" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        </div>
-        <div>
-            <div style="font-size:14px;font-weight:700;color:#0f172a;">Employee Data</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px;">View and manage employee records</div>
-        </div>
-        <svg style="margin-left:auto;color:#94a3b8;" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    </a>
-    <a href="{{ route('settings') }}?panel=personnel" style="background:white;border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 2px 8px rgba(0,0,0,.08);text-decoration:none;border:2px solid #e2e8f0;transition:border-color .2s;">
-        <div style="width:44px;height:44px;border-radius:10px;background:#eff6ff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="22" height="22" fill="none" stroke="#1e4575" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-        </div>
-        <div>
-            <div style="font-size:14px;font-weight:700;color:#0f172a;">ARC Contact List</div>
-            <div style="font-size:12px;color:#64748b;margin-top:2px;">ArkCrest personnel contact directory</div>
-        </div>
-        <svg style="margin-left:auto;color:#94a3b8;" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    </a>
-</div>
-
 @endsection
