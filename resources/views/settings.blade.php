@@ -1390,6 +1390,7 @@
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
               <thead><tr style="background:#f8fafc;">
                 <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e2e8f0;">Name</th>
+                <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e2e8f0;">ID</th>
                 <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e2e8f0;">Status</th>
                 <th style="padding:8px 12px;text-align:right;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;border-bottom:1px solid #e2e8f0;">Actions</th>
               </tr></thead>
@@ -1401,6 +1402,9 @@
                       <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1e4575,#2563eb);display:flex;align-items:center;justify-content:center;color:white;font-size:11px;font-weight:700;flex-shrink:0;">{{ strtoupper(substr($agent->name,0,1)) }}</div>
                       <span id="agent-name-{{ $agent->id }}">{{ $agent->name }}</span>
                     </div>
+                  </td>
+                  <td style="padding:10px 12px;color:#64748b;font-size:12px;">
+                    {{ $agent->employee_id ?: ($agent->user?->employee_id ?: '—') }}
                   </td>
                   <td style="padding:10px 12px;text-align:center;">
                     <div style="position:relative;display:inline-block;" id="status-wrap-{{ $agent->id }}">

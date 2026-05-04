@@ -24,14 +24,25 @@ class TripScheduleController extends Controller
         $team = \App\Models\SalesTeam::where('team_name', $request->team_name)->first();
         if ($team) {
             $alreadyAgent = \App\Models\SalesAgent::where('team_id', $team->id)
-                ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($user->name))])
-                ->exists();
+                ->where(function($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($user->name))]);
+                })->exists();
+
             if (!$alreadyAgent) {
                 \App\Models\SalesAgent::create([
-                    'team_id'   => $team->id,
-                    'name'      => $user->name,
-                    'is_active' => true,
+                    'team_id'     => $team->id,
+                    'user_id'     => $user->id,
+                    'employee_id' => $user->employee_id,
+                    'name'        => $user->name,
+                    'is_active'   => true,
                 ]);
+            } else {
+                // Update existing agent record with user_id if missing
+                \App\Models\SalesAgent::where('team_id', $team->id)
+                    ->whereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($user->name))])
+                    ->whereNull('user_id')
+                    ->update(['user_id' => $user->id, 'employee_id' => $user->employee_id]);
             }
         }
 
@@ -40,6 +51,26 @@ class TripScheduleController extends Controller
 
     public function show()
     {
+        $user = auth()->user();
+
+        // Sync team_name from sales_agents if user doesn't have one yet
+        if ($user && !$user->team_name) {
+            $agentRecord = \App\Models\SalesAgent::where(function($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($user->name))]);
+                })->with('team')->first();
+
+            if ($agentRecord && $agentRecord->team) {
+                $user->update([
+                    'team_name' => $agentRecord->team->team_name,
+                ]);
+                // Also link user_id if missing
+                if (!$agentRecord->user_id) {
+                    $agentRecord->update(['user_id' => $user->id, 'employee_id' => $user->employee_id]);
+                }
+            }
+        }
+
         try {
             $teams = \App\Models\SalesTeam::orderBy('team_name')->pluck('team_name');
         } catch (\Exception $e) {

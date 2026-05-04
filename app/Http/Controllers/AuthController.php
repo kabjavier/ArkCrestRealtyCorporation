@@ -38,14 +38,13 @@ class AuthController extends Controller
 
         // Check if user is an inactive sales agent in team management
         if (\Schema::hasColumn('sales_agents', 'is_active')) {
-            $inactiveAgent = \App\Models\SalesAgent::where('name', $user->name)
+            $inactiveAgent = \App\Models\SalesAgent::where(function($q) use ($user) {
+                    $q->where('user_id', $user->id)
+                      ->orWhereRaw('LOWER(TRIM(name)) = ?', [strtolower(trim($user->name))]);
+                })
                 ->where('is_active', false)
                 ->first();
             if ($inactiveAgent) {
-                // Get executives contact info
-                $executives = \App\Models\SalesTeam::where('team_name', 'like', '%executive%')
-                    ->with('agents')
-                    ->first();
                 Auth::logout();
                 return back()->with('inactive_agent', true)->withInput($request->only('email'));
             }
