@@ -496,6 +496,22 @@ class SalesMarketingController extends Controller
         return response()->json(['success' => true, 'status' => $status]);
     }
 
+    public function unmarkInstallmentPaid(Request $request, $id)
+    {
+        if (!auth()->user()->isAdmin()) abort(403);
+        $inst = \App\Models\DownpaymentInstallment::findOrFail($id);
+        $inst->update(['is_paid' => false, 'paid_at' => null]);
+
+        // Recalculate parent downpayment_status
+        $parentId = $inst->commission_request_sales_id;
+        $all  = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $parentId)->count();
+        $paid = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $parentId)->where('is_paid', true)->count();
+        $status = $paid === 0 ? null : ($paid === $all ? 'Paid' : 'Partial');
+        CommissionRequestSales::findOrFail($parentId)->update(['downpayment_status' => $status]);
+
+        return response()->json(['success' => true, 'status' => $status]);
+    }
+
     public function updateDownpaymentInstallment(Request $request, $id)
     {
         $record = CommissionRequestSales::findOrFail($id);

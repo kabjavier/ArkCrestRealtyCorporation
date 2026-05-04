@@ -152,6 +152,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/client-database/{id}/installments/setup', [App\Http\Controllers\SalesMarketingController::class, 'setupInstallments']);
     Route::patch('/api/installments/{id}/amount', [App\Http\Controllers\SalesMarketingController::class, 'updateInstallmentAmount']);
     Route::patch('/api/installments/{id}/paid', [App\Http\Controllers\SalesMarketingController::class, 'markInstallmentPaid']);
+    Route::patch('/api/installments/{id}/unpaid', [App\Http\Controllers\SalesMarketingController::class, 'unmarkInstallmentPaid']);
     Route::delete('/client-database/{id}', [App\Http\Controllers\SalesMarketingController::class, 'destroy'])->name('client-database.destroy');
 
     // Site Visit Database
