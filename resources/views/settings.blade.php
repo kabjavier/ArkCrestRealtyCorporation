@@ -1403,7 +1403,7 @@
                       <span id="agent-name-{{ $agent->id }}">{{ $agent->name }}</span>
                     </div>
                   </td>
-                  <td style="padding:10px 12px;color:#64748b;font-size:12px;">
+                  <td style="padding:10px 12px;color:#64748b;font-size:12px;" id="agent-empid-{{ $agent->id }}">
                     {{ $agent->employee_id ?: ($agent->user?->employee_id ?: '—') }}
                   </td>
                   <td style="padding:10px 12px;text-align:center;">
@@ -1432,7 +1432,7 @@
                     </div>
                   </td>
                   <td style="padding:10px 12px;text-align:right;white-space:nowrap;">
-                    <button type="button" onclick="openEditAgent({{ $agent->id }}, '{{ addslashes($agent->name) }}')"
+                    <button type="button" onclick="openEditAgent({{ $agent->id }}, '{{ addslashes($agent->name) }}', '{{ addslashes($agent->employee_id ?: ($agent->user?->employee_id ?: '')) }}')"
                       style="padding:4px 10px;background:#eff6ff;color:#1e4575;border:1px solid #bfdbfe;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;margin-right:4px;">Edit</button>
                     <form method="POST" action="{{ route('settings.agents.destroy', $agent->id) }}" style="display:inline;" onsubmit="return confirm('Remove agent?')">@csrf @method('DELETE')
                       <button type="submit" style="padding:4px 10px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">Delete</button>
@@ -1498,9 +1498,13 @@
       <div id="editAgentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;" onclick="if(event.target===this)closeEditAgent();">
         <div style="background:white;border-radius:14px;padding:24px 28px;width:380px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2);">
           <div style="font-size:15px;font-weight:700;color:#0f172a;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #f1f5f9;">Edit Agent</div>
-          <div style="margin-bottom:18px;">
+          <div style="margin-bottom:12px;">
             <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Name</label>
             <input class="st-input" type="text" id="edit_agent_name_input">
+          </div>
+          <div style="margin-bottom:18px;">
+            <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Employee ID</label>
+            <input class="st-input" type="text" id="edit_agent_empid_input" placeholder="e.g. ARC-SP-0012">
           </div>
           <div style="display:flex;gap:10px;">
             <button type="button" onclick="saveEditAgent()" class="st-btn st-btn-primary" style="flex:1;">Save</button>
@@ -1935,23 +1939,28 @@ function openEditTeam(id, name, leader, manager) {
 }
 function closeEditTeam() { document.getElementById('editTeamModal').style.display = 'none'; }
 
-function openEditAgent(id, name) {
+function openEditAgent(id, name, empid) {
     _editAgentId = id;
     document.getElementById('edit_agent_name_input').value = name;
+    document.getElementById('edit_agent_empid_input').value = empid || '';
     document.getElementById('editAgentModal').style.display = 'flex';
 }
 function closeEditAgent() { document.getElementById('editAgentModal').style.display = 'none'; }
 function saveEditAgent() {
-    var name = document.getElementById('edit_agent_name_input').value.trim();
+    var name  = document.getElementById('edit_agent_name_input').value.trim();
+    var empid = document.getElementById('edit_agent_empid_input').value.trim();
     if (!name) return;
-    fetch('/api/settings/agents/' + _editAgentId, {
+    fetch('/settings/agents/' + _editAgentId, {
         method: 'PATCH',
         headers: {'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},
-        body: JSON.stringify({name: name})
+        body: JSON.stringify({name: name, employee_id: empid})
     }).then(r => r.json()).then(d => {
         if (d.success) {
             var el = document.getElementById('agent-name-' + _editAgentId);
             if (el) el.textContent = name;
+            // Update the ID cell if it exists
+            var idEl = document.getElementById('agent-empid-' + _editAgentId);
+            if (idEl) idEl.textContent = empid || '—';
             closeEditAgent();
         }
     });

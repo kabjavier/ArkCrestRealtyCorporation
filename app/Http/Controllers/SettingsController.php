@@ -264,6 +264,15 @@ class SettingsController extends Controller
         if ($request->has('name')) {
             $agent->update(['name' => $request->name]);
         }
+        if ($request->has('employee_id')) {
+            $empId = trim($request->input('employee_id'));
+            $updates = ['employee_id' => $empId ?: null];
+            if ($empId) {
+                $user = \App\Models\User::where('employee_id', $empId)->first();
+                if ($user) $updates['user_id'] = $user->id;
+            }
+            $agent->update($updates);
+        }
         if ($request->exists('is_active')) {
             $agent->update(['is_active' => filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN)]);
         }
