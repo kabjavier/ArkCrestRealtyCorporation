@@ -387,6 +387,22 @@ class SalesMarketingController extends Controller
         $record = CommissionRequestSales::findOrFail($id);
         $oldStatus = $record->client_status;
 
+        // Block Done only if there is absolutely no downpayment activity yet
+        if ($request->client_status === 'Done') {
+            $dpStatus = $record->downpayment_status;
+
+            // Check installments — at least 1 paid is enough
+            $installments = \App\Models\DownpaymentInstallment::where('commission_request_sales_id', $id)->get();
+            $hasAnyInstallmentPaid = $installments->contains(fn($i) => $i->is_paid);
+
+            // Check if downpayment_status is set to something meaningful (Spot, Paid, Partial, etc.)
+            $hasDownpaymentStatus = !empty($dpStatus) && !in_array($dpStatus, ['— Set —', null]);
+
+            if (!$hasAnyInstallmentPaid && !$hasDownpaymentStatus) {
+                return back()->with('error', 'Cannot set to Done — client must have at least one downpayment recorded first.');
+            }
+        }
+
         $record->update(['client_status' => $request->client_status ?: null]);
 
         // Fire notification when status is set to Done (downpayment received)
