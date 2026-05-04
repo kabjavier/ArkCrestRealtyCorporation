@@ -1958,9 +1958,8 @@ function saveEditAgent() {
         if (d.success) {
             var el = document.getElementById('agent-name-' + _editAgentId);
             if (el) el.textContent = name;
-            // Update the ID cell if it exists
             var idEl = document.getElementById('agent-empid-' + _editAgentId);
-            if (idEl) idEl.textContent = empid || '—';
+            if (idEl) idEl.textContent = (d.employee_id || empid || '—');
             closeEditAgent();
         }
     });

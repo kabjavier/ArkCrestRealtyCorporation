@@ -268,14 +268,36 @@ class SettingsController extends Controller
             $updates['name'] = $request->name;
         }
 
-        if ($request->has('employee_id') && \Schema::hasColumn('sales_agents', 'employee_id')) {
+        // Handle employee_id — store on sales_agents if column exists, otherwise just link via user
+        if ($request->has('employee_id')) {
             $empId = trim($request->input('employee_id'));
-            $updates['employee_id'] = $empId ?: null;
+
+            // Try to find and link the user
+            $linkedUser = null;
             if ($empId) {
-                $user = \App\Models\User::where('employee_id', $empId)->first();
-                if ($user && \Schema::hasColumn('sales_agents', 'user_id')) {
-                    $updates['user_id'] = $user->id;
-                }
+                $linkedUser = \App\Models\User::where('employee_id', $empId)->first();
+            }
+
+            // Save employee_id on sales_agents if column exists
+            if (\Schema::hasColumn('sales_agents', 'employee_id')) {
+                $updates['employee_id'] = $empId ?: null;
+            }
+
+            // Save user_id link if column exists
+            if (\Schema::hasColumn('sales_agents', 'user_id') && $linkedUser) {
+                $updates['user_id'] = $linkedUser->id;
+            }
+
+            // If columns don't exist yet, add them now inline
+            if (!empty($empId) && !\Schema::hasColumn('sales_agents', 'employee_id')) {
+                try {
+                    \Schema::table('sales_agents', function ($table) {
+                        $table->unsignedBigInteger('user_id')->nullable()->after('team_id');
+                        $table->string('employee_id')->nullable()->after('user_id');
+                    });
+                    $updates['employee_id'] = $empId;
+                    if ($linkedUser) $updates['user_id'] = $linkedUser->id;
+                } catch (\Exception $e) { /* already exists */ }
             }
         }
 
@@ -287,8 +309,13 @@ class SettingsController extends Controller
             $agent->update($updates);
         }
 
-        $isActive = \Schema::hasColumn('sales_agents', 'is_active') ? (bool) $agent->fresh()->is_active : true;
-        return response()->json(['success' => true, 'is_active' => $isActive]);
+        $agent->refresh();
+        $isActive = \Schema::hasColumn('sales_agents', 'is_active') ? (bool) $agent->is_active : true;
+        $empIdResult = \Schema::hasColumn('sales_agents', 'employee_id')
+            ? ($agent->employee_id ?: ($agent->user?->employee_id ?: ''))
+            : ($agent->user?->employee_id ?: '');
+
+        return response()->json(['success' => true, 'is_active' => $isActive, 'employee_id' => $empIdResult]);
     }
 
     public function toggleAgentStatus(Request $request, $id)
