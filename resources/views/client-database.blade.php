@@ -841,21 +841,35 @@ function renderInstallments(list) {
         container.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px;font-size:13px;">Set amount and terms, then click "Set Terms".</div>';
         return;
     }
-    container.innerHTML = list.map(inst => `
-        <div style="display:flex;align-items:center;gap:0;border:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};border-radius:10px;overflow:hidden;background:${inst.is_paid ? '#f0fdf4' : '#f8fafc'};">
-            <span style="font-size:13px;font-weight:700;color:#1e4575;padding:10px 14px;white-space:nowrap;border-right:1.5px solid ${inst.is_paid ? '#bbf7d0' : '#e2e8f0'};">Term ${inst.term_number}</span>
-            <input type="number" id="inst_amount_${inst.id}" value="${inst.amount || ''}" placeholder="Enter amount here" step="0.01" min="0"
-                ${inst.is_paid && !_isAdmin ? 'disabled' : ''}
-                onblur="saveInstallmentAmount(${inst.id})"
-                style="flex:1;padding:10px 12px;border:none;outline:none;font-size:13px;background:transparent;${inst.is_paid ? 'color:#166534;' : ''}">
-            ${inst.is_paid
-                ? (_isAdmin
-                    ? `<button onclick="unmarkPaid(${inst.id})" style="padding:10px 14px;background:#dcfce7;color:#166534;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;border-left:1.5px solid #bbf7d0;" title="Click to undo">✓ Paid ↩</button>`
-                    : `<span style="padding:10px 14px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;white-space:nowrap;border-left:1.5px solid #bbf7d0;">✓ Paid</span>`)
-                : `<button onclick="markPaid(${inst.id})" style="padding:10px 16px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>`
-            }
-        </div>
-    `).join('');
+    container.innerHTML = list.map(inst => {
+        const border = inst.is_paid ? '#bbf7d0' : '#e2e8f0';
+        const bg     = inst.is_paid ? '#f0fdf4' : '#f8fafc';
+
+        if (_isAdmin) {
+            // Admin: amount input (always editable) + Paid/Undo button
+            const actionBtn = inst.is_paid
+                ? `<button onclick="unmarkPaid(${inst.id})" style="padding:10px 14px;background:#dcfce7;color:#166534;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;border-left:1.5px solid #bbf7d0;" title="Click to undo">✓ Paid ↩</button>`
+                : `<button onclick="markPaid(${inst.id})" style="padding:10px 16px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>`;
+            return `
+                <div style="display:flex;align-items:center;gap:0;border:1.5px solid ${border};border-radius:10px;overflow:hidden;background:${bg};">
+                    <span style="font-size:13px;font-weight:700;color:#1e4575;padding:10px 14px;white-space:nowrap;border-right:1.5px solid ${border};">Term ${inst.term_number}</span>
+                    <input type="number" id="inst_amount_${inst.id}" value="${inst.amount || ''}" placeholder="Enter amount here" step="0.01" min="0"
+                        onblur="saveInstallmentAmount(${inst.id})"
+                        style="flex:1;padding:10px 12px;border:none;outline:none;font-size:13px;background:transparent;${inst.is_paid ? 'color:#166534;' : ''}">
+                    ${actionBtn}
+                </div>`;
+        } else {
+            // Staff: no amount input, just term label + Paid button (locked if already paid)
+            const actionBtn = inst.is_paid
+                ? `<span style="padding:10px 14px;background:#dcfce7;color:#166534;font-size:12px;font-weight:700;white-space:nowrap;border-left:1.5px solid #bbf7d0;">✓ Paid</span>`
+                : `<button onclick="markPaid(${inst.id})" style="padding:10px 16px;background:linear-gradient(135deg,#A37929,#d4a03a);color:white;border:none;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Paid</button>`;
+            return `
+                <div style="display:flex;align-items:center;gap:0;border:1.5px solid ${border};border-radius:10px;overflow:hidden;background:${bg};">
+                    <span style="font-size:13px;font-weight:700;color:#1e4575;padding:10px 14px;white-space:nowrap;border-right:1.5px solid ${border};flex:1;">Term ${inst.term_number}${inst.amount ? ' — ₱' + Number(inst.amount).toLocaleString() : ''}</span>
+                    ${actionBtn}
+                </div>`;
+        }
+    }).join('');
 }
 
 function saveInstallmentAmount(instId) {
