@@ -174,7 +174,7 @@
             <th style="width:40px;text-align:center">#</th>
             <th>Name of Client</th><th>Property</th><th>Company</th>
             <th>Name of Agent</th><th>Email</th><th>Mobile Number</th><th>Address</th>
-            <th>Tripping Date</th><th>Tripping Time</th><th>Mode of Visit</th><th>Actions</th>
+            <th>Tripping Date</th><th>Tripping Time</th><th>Mode of Visit</th><th>Date Submitted</th><th>Actions</th>
         </tr></thead>
         <tbody>
         @foreach($confirmed->values() as $i => $r)
@@ -193,6 +193,7 @@
             <td><div class="td-name" style="font-size:12px">{{ $r->tripping_date ? $r->tripping_date->format('M j, Y') : '—' }}</div></td>
             <td><div class="td-sub">{{ $r->tripping_time ? \Carbon\Carbon::parse($r->tripping_time)->format('g:i A') : '—' }}</div></td>
             <td><div class="td-sub">{{ $r->tripping_type ?? '—' }}</div></td>
+            <td><div class="td-sub" style="white-space:nowrap;">{{ $r->created_at ? $r->created_at->format('M j, Y g:i A') : '—' }}</div></td>
             <td>
                 <div class="actions">
                     {{-- Reschedule --}}
@@ -265,7 +266,7 @@
             <th>Name of Client</th><th>Property</th><th>Company</th>
             <th>Name of Agent</th><th>Email</th><th>Mobile Number</th><th>Address</th>
             <th>Tripping Date</th><th>Tripping Time</th><th>Mode of Visit</th>
-            <th>Actions</th>
+            <th>Date Submitted</th><th>Actions</th>
         </tr></thead>
         <tbody>
         @foreach($grp->values() as $i => $r)
@@ -284,6 +285,7 @@
             <td>{{ $r->tripping_date ? $r->tripping_date->format('M j, Y') : '—' }}</td>
             <td><div class="td-sub">{{ $r->tripping_time ? \Carbon\Carbon::parse($r->tripping_time)->format('g:i A') : '—' }}</div></td>
             <td><div class="td-sub">{{ $r->tripping_type ?? '—' }}</div></td>
+            <td><div class="td-sub" style="white-space:nowrap;">{{ $r->created_at ? $r->created_at->format('M j, Y g:i A') : '—' }}</div></td>
             <td>
                 <div class="actions">
                     @if($status === 'done')
