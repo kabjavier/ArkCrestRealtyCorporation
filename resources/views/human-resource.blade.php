@@ -47,11 +47,99 @@
 
 {{-- HR Forms Section --}}
 <div style="margin-bottom:12px;">
-    <div style="font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+    <div style="font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:20px;display:flex;align-items:center;gap:8px;">
         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         HR Forms
     </div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px;align-items:start;">
+
+        {{-- Form 1: Change Day-Off --}}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;" onclick="openHrForm('dayoff')"
+            onmouseover="this.querySelector('.doc-card').style.transform='scale(1.04) translateY(-4px)';this.querySelector('.doc-card').style.boxShadow='0 16px 48px rgba(0,0,0,.22)'"
+            onmouseout="this.querySelector('.doc-card').style.transform='scale(1) translateY(0)';this.querySelector('.doc-card').style.boxShadow='4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12)'">
+            <div class="doc-card" style="width:100%;background:white;border:1px solid #e2e8f0;border-radius:4px;box-shadow:4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12);transition:all .25s;padding:18px 16px;min-height:220px;position:relative;overflow:hidden;">
+                {{-- Top accent bar --}}
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#1e4575,#2563eb);"></div>
+                {{-- Mini form preview --}}
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px;">
+                    <img src="{{ asset('images/ArkCrest_Logo.png') }}" style="width:22px;height:22px;object-fit:contain;opacity:.7;">
+                    <div style="font-size:9px;font-weight:800;color:#1e4575;text-transform:uppercase;letter-spacing:.5px;">Change Day-Off Form</div>
+                </div>
+                <div style="height:1px;background:#e2e8f0;margin-bottom:8px;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+                    @foreach(['Name','Position','Prev. Day-Off','Department','New Day-Off','Date (Week)'] as $f)
+                    <div style="font-size:7px;color:#94a3b8;">{{ $f }}: <span style="display:inline-block;width:50px;border-bottom:1px solid #cbd5e1;">&nbsp;</span></div>
+                    @endforeach
+                </div>
+                <div style="font-size:7px;color:#94a3b8;margin-bottom:3px;">Reason:</div>
+                <div style="border:1px solid #e2e8f0;height:36px;border-radius:2px;margin-bottom:8px;"></div>
+                <div style="display:flex;justify-content:space-between;">
+                    <div style="font-size:6px;color:#64748b;">Approved by:<br><span style="font-weight:700;text-decoration:underline;">Mr. Edwin Mojica</span></div>
+                    <div style="font-size:6px;color:#64748b;">Acknowledged by:<br><span style="font-weight:700;text-decoration:underline;">Mr. Jossen Fernandez</span></div>
+                </div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#374151;text-align:center;">Change Day-Off Form</div>
+            <div style="font-size:11px;color:#94a3b8;text-align:center;">Click to open &amp; print</div>
+        </div>
+
+        {{-- Form 2: Absences Report --}}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;" onclick="openHrForm('absences')"
+            onmouseover="this.querySelector('.doc-card').style.transform='scale(1.04) translateY(-4px)';this.querySelector('.doc-card').style.boxShadow='0 16px 48px rgba(0,0,0,.22)'"
+            onmouseout="this.querySelector('.doc-card').style.transform='scale(1) translateY(0)';this.querySelector('.doc-card').style.boxShadow='4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12)'">
+            <div class="doc-card" style="width:100%;background:white;border:1px solid #e2e8f0;border-radius:4px;box-shadow:4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12);transition:all .25s;padding:18px 16px;min-height:220px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#A37929,#d4a03a);"></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px;">
+                    <img src="{{ asset('images/ArkCrest_Logo.png') }}" style="width:22px;height:22px;object-fit:contain;opacity:.7;">
+                    <div style="font-size:9px;font-weight:800;color:#A37929;text-transform:uppercase;letter-spacing:.5px;">Absences Report Form</div>
+                </div>
+                <div style="height:1px;background:#e2e8f0;margin-bottom:8px;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
+                    @foreach(['Name','Department','Date Today','&nbsp;'] as $f)
+                    <div style="font-size:7px;color:#94a3b8;">{{ $f }}: <span style="display:inline-block;width:50px;border-bottom:1px solid #cbd5e1;">&nbsp;</span></div>
+                    @endforeach
+                </div>
+                <div style="font-size:7px;color:#94a3b8;margin-bottom:3px;">Explanation:</div>
+                <div style="border:1px solid #e2e8f0;height:60px;border-radius:2px;margin-bottom:8px;"></div>
+                <div style="display:flex;justify-content:space-between;">
+                    <div style="font-size:6px;color:#64748b;">Assessed by:<br><span style="display:inline-block;width:60px;border-bottom:1px solid #94a3b8;">&nbsp;</span></div>
+                    <div style="font-size:6px;color:#64748b;">Acknowledged by:<br><span style="display:inline-block;width:60px;border-bottom:1px solid #94a3b8;">&nbsp;</span></div>
+                </div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#374151;text-align:center;">Absences Report Form</div>
+            <div style="font-size:11px;color:#94a3b8;text-align:center;">Click to open &amp; print</div>
+        </div>
+
+        {{-- Form 3: Allowance Voucher --}}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;" onclick="openHrForm('voucher')"
+            onmouseover="this.querySelector('.doc-card').style.transform='scale(1.04) translateY(-4px)';this.querySelector('.doc-card').style.boxShadow='0 16px 48px rgba(0,0,0,.22)'"
+            onmouseout="this.querySelector('.doc-card').style.transform='scale(1) translateY(0)';this.querySelector('.doc-card').style.boxShadow='4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12)'">
+            <div class="doc-card" style="width:100%;background:white;border:1px solid #e2e8f0;border-radius:4px;box-shadow:4px 4px 0 #d1d5db,0 4px 16px rgba(0,0,0,.12);transition:all .25s;padding:18px 16px;min-height:220px;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#0f2444,#1e4575);"></div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:4px;">
+                    <img src="{{ asset('images/ArkCrest_Logo.png') }}" style="width:22px;height:22px;object-fit:contain;opacity:.7;">
+                    <div style="font-size:9px;font-weight:800;color:#0f2444;text-transform:uppercase;letter-spacing:.5px;">Allowance Voucher ARCS</div>
+                </div>
+                <div style="height:1px;background:#e2e8f0;margin-bottom:6px;"></div>
+                {{-- Mini table --}}
+                <table style="width:100%;border-collapse:collapse;font-size:6px;margin-bottom:6px;">
+                    <tr style="background:#f1f5f9;"><td style="border:1px solid #e2e8f0;padding:2px 4px;">Employee Name</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td><td style="border:1px solid #e2e8f0;padding:2px 4px;">Designation</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td></tr>
+                    <tr><td style="border:1px solid #e2e8f0;padding:2px 4px;">Pay Period</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td><td style="border:1px solid #e2e8f0;padding:2px 4px;">Department</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td></tr>
+                    <tr style="background:#f1f5f9;"><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;">Earnings</td><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;">Amt</td><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;">Deductions</td><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;">Amt</td></tr>
+                    <tr><td style="border:1px solid #e2e8f0;padding:2px 4px;">Basic Pay</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td><td style="border:1px solid #e2e8f0;padding:2px 4px;">Absences</td><td style="border:1px solid #e2e8f0;padding:2px 4px;"></td></tr>
+                    <tr><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;text-align:right;" colspan="2">Total:</td><td style="border:1px solid #e2e8f0;padding:2px 4px;font-weight:700;text-align:right;" colspan="2">Net Pay: ₱</td></tr>
+                </table>
+                <div style="display:flex;justify-content:space-between;">
+                    <div style="font-size:6px;color:#64748b;">Prepared by</div>
+                    <div style="font-size:6px;color:#64748b;">Approved by</div>
+                    <div style="font-size:6px;color:#64748b;">Received by</div>
+                </div>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#374151;text-align:center;">Allowance Voucher ARCS</div>
+            <div style="font-size:11px;color:#94a3b8;text-align:center;">Click to open &amp; print</div>
+        </div>
+
+    </div>
+</div>
 
         {{-- Form 1: Change Day-Off --}}
         <div onclick="openHrForm('dayoff')" style="background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,box-shadow .2s;overflow:hidden;border:1.5px solid #e2e8f0;"
@@ -155,7 +243,7 @@ function closeHrForm() {
 function printHrForm() {
     var content = document.getElementById('hrFormContent').innerHTML;
     var win = window.open('', '_blank');
-    win.document.write('<html><head><title>HR Form</title><style>body{font-family:"Times New Roman",serif;font-size:13px;color:#111;padding:30px;} table{border-collapse:collapse;width:100%;} td,th{border:1px solid #111;padding:4px 8px;} .no-border td{border:none;} @media print{body{padding:10px;}}</style></head><body>' + content + '</body></html>');
+    win.document.write('<html><head><title>HR Form</title><style>@page{size:letter;margin:0.75in} body{font-family:"Times New Roman",serif;font-size:13px;color:#111;margin:0;} table{border-collapse:collapse;width:100%;} td,th{border:1px solid #111;padding:4px 8px;} .no-border td,.no-border th{border:none;} @media print{body{margin:0;}}</style></head><body>' + content + '</body></html>');
     win.document.close();
     win.focus();
     setTimeout(function(){ win.print(); }, 400);
