@@ -46,6 +46,7 @@ Route::post('/', function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', function() { return redirect()->route('login'); });
 
 // Protected routes
 Route::middleware('auth')->group(function () {
