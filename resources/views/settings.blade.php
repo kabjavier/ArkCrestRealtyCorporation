@@ -981,11 +981,6 @@
             'Forms' => [
               'forms'                            => 'Forms',
             ],
-            'Human Resource' => [
-              'human-resource'                   => 'HR Dashboard',
-              'human-resource.employee-data'     => '↳ Employee Data',
-              'human-resource.contact-list'      => '↳ ARC Contact List',
-            ],
             'Settings' => [
               'settings.users'                   => 'User Management',
               'settings.employee'                => 'Employee Data',

@@ -397,8 +397,8 @@
                     </li>
                     @endif
                     
-                    <!-- Human Resource -->
-                    @if($canSee('human-resource'))
+                    <!-- Forms -->
+                    @if($canSee('forms'))
                     <li class="nav-item-wrapper">
                         <div class="nav-item-container">
                             <a href="{{ route('human-resource') }}" class="nav-item nav-item-with-dropdown" data-page="human-resource" onclick="event.stopPropagation();">
@@ -414,7 +414,6 @@
                             </button>
                         </div>
                         <ul class="nav-submenu" id="hrSubmenu">
-                            @if($canSee('human-resource.employee-data'))
                             <li>
                                 <a href="{{ route('hr.employee-data') }}" class="nav-subitem" data-page="hr-employee-data">
                                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -423,8 +422,6 @@
                                     <span class="sidebar-text">Employee Data</span>
                                 </a>
                             </li>
-                            @endif
-                            @if($canSee('human-resource.contact-list'))
                             <li>
                                 <a href="{{ route('hr.contact-list') }}" class="nav-subitem" data-page="hr-contact-list">
                                     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -433,10 +430,8 @@
                                     <span class="sidebar-text">ARC Contact List</span>
                                 </a>
                             </li>
-                            @endif
                         </ul>
                     </li>
-                    @endif
                     <li>
                         <a href="{{ route('tripping') }}" class="nav-item" data-page="forms-site-visit" target="_self">
                             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
