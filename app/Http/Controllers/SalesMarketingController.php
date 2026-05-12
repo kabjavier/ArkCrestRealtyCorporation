@@ -566,18 +566,20 @@ class SalesMarketingController extends Controller
     public function updateDownpaymentStatus(Request $request, $id)
     {
         $record = CommissionRequestSales::findOrFail($id);
-        $updates = ['downpayment_status' => $request->downpayment_status ?: null];
+        $updates = ['downpayment_status' => $request->input('downpayment_status') ?: null];
         if ($request->filled('downpayment_amount')) {
-            $updates['downpayment_amount'] = $request->downpayment_amount;
+            $updates['downpayment_amount'] = $request->input('downpayment_amount');
         }
         if ($request->filled('downpayment_date')) {
-            // Auto-create column if missing
             if (!\Schema::hasColumn('commission_requests_sales', 'downpayment_date')) {
                 try { \DB::statement("ALTER TABLE commission_requests_sales ADD COLUMN downpayment_date DATE NULL"); } catch (\Exception $e) {}
             }
-            $updates['downpayment_date'] = $request->downpayment_date;
+            $updates['downpayment_date'] = $request->input('downpayment_date');
         }
         $record->update($updates);
+        if ($request->expectsJson() || $request->isJson()) {
+            return response()->json(['success' => true]);
+        }
         return back()->with('success', 'Downpayment status updated.');
     }
 

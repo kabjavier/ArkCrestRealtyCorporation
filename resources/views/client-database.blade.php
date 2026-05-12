@@ -810,10 +810,23 @@ function selectDPType(type) {
 function saveSpotDP() {
     const amount = document.getElementById('dp_spot_amount').value;
     const date   = document.getElementById('dp_spot_date').value;
-    const form = document.createElement('form');
-    form.method = 'POST'; form.action = `/client-database/${_dpRecordId}/downpayment-status`;
-    form.innerHTML = `<input name="_token" value="${_dpCsrf}"><input name="_method" value="PATCH"><input name="downpayment_status" value="Spot Paid"><input name="downpayment_amount" value="${amount}"><input name="downpayment_date" value="${date}">`;
-    document.body.appendChild(form); form.submit();
+    fetch(`/client-database/${_dpRecordId}/downpayment-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': _dpCsrf },
+        body: JSON.stringify({ _method: 'PATCH', downpayment_status: 'Spot Paid', downpayment_amount: amount, downpayment_date: date })
+    }).then(r => {
+        // Close modal and update the button in the table
+        document.getElementById('dpModal').style.display = 'none';
+        // Update the downpayment status button in the table
+        var btn = document.querySelector(`[onclick*="openDPModal(${_dpRecordId},"]`);
+        if (btn) {
+            btn.textContent = 'Spot Paid';
+            btn.style.background = '#dcfce7';
+            btn.style.color = '#166534';
+        }
+        // Reload page to reflect changes
+        window.location.reload();
+    });
 }
 
 function saveOthersDP() {

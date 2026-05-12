@@ -26,6 +26,8 @@ class HrFormController extends Controller
                 $table->timestamps();
             });
         }
+
+        $form = HrForm::create([
             'type'       => $request->type,
             'title'      => $request->title ?: HrForm::typeLabel($request->type) . ' — ' . now()->format('M d, Y'),
             'data'       => $request->data,
