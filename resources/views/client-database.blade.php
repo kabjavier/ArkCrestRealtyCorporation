@@ -309,6 +309,7 @@
         <form id="editForm" method="POST">
             @csrf @method('PUT')
             <input type="hidden" id="edit_id" name="id">
+            <input type="hidden" id="edit_date_requested" name="date_requested">
             <div style="padding:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
                 <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase">Developer's Name</label><input type="text" id="edit_developer_name" name="developer_name" style="padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px"></div>
                 <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:11px;font-weight:700;color:#1e4575;text-transform:uppercase">Project Name *</label><input type="text" id="edit_project_name" name="project_name" required style="padding:10px 14px;border:2px solid #d0d5dd;border-radius:8px;font-size:14px"></div>
@@ -497,13 +498,17 @@ function editRow(id){
         document.getElementById('edit_discount').value=d.discount??'';
         document.getElementById('edit_net_tcp').value=d.net_tcp??'';
         document.getElementById('edit_terms_of_payment').value=d.terms_of_payment??'';
-        document.getElementById('edit_reservation_date').value=d.reservation_date?d.reservation_date.split('T')[0]:'';
+        document.getElementById('edit_reservation_date').value=d.reservation_date?(d.reservation_date+'').split('T')[0]:'';
         document.getElementById('edit_number_of_units').value=d.number_of_units??1;
-        document.getElementById('edit_date_of_downpayment').value=d.date_of_downpayment?d.date_of_downpayment.split('T')[0]:'';
+        document.getElementById('edit_date_of_downpayment').value=d.date_of_downpayment?(d.date_of_downpayment+'').split('T')[0]:'';
         document.getElementById('edit_agent_name').value=d.agent_name??'';
         document.getElementById('edit_client_status').value=d.status??'';
+        document.getElementById('edit_date_requested').value=d.date_requested?(d.date_requested+'').split('T')[0]:'';
         document.getElementById('editForm').action=`/client-database/${d.id}`;
         document.getElementById('editModal').style.display='flex';
+    }).catch(err=>{
+        alert('Failed to load record. Please try again.');
+        console.error(err);
     });
 }
 
