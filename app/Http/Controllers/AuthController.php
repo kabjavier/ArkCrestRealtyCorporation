@@ -276,13 +276,20 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json(['success' => false, 'message' => 'Email not found. Please check and try again.'], 422);
         }
+
+        // check_only = just verify email exists (used for method selection screen)
+        if ($request->input('check_only')) {
+            return response()->json([
+                'success'      => true,
+                'has_question' => !empty($user->security_question),
+                'question'     => $user->security_question,
+            ]);
+        }
+
         if (!$user->security_question) {
             return response()->json(['success' => false, 'message' => 'No security question set for this account. Please contact your administrator to reset your password.'], 422);
         }
-        // check_only = just verify email exists and has security question
-        if ($request->input('check_only')) {
-            return response()->json(['success' => true, 'question' => $user->security_question]);
-        }
+
         return response()->json(['success' => true, 'question' => $user->security_question]);
     }
 
@@ -369,11 +376,16 @@ class AuthController extends Controller
 
     public function resetPasswordByQuestion(Request $request)
     {
-        $request->validate([
-            'email'                 => 'required|email',
-            'token'                 => 'required|string',
-            'password'              => 'required|string|min:8|confirmed',
-        ]);
+        try {
+            $request->validate([
+                'email'    => 'required|email',
+                'token'    => 'required|string',
+                'password' => ['required', 'string', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $msg = collect($e->errors())->flatten()->first();
+            return response()->json(['success' => false, 'message' => $msg], 422);
+        }
 
         // Verify token
         $record = \DB::table('password_reset_tokens')

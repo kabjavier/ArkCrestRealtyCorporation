@@ -470,7 +470,7 @@ function checkPwdStrength(val) {
         <div id="forgotStep1b" style="padding:22px;display:none;">
             <p style="font-size:12px;color:#64748b;margin-bottom:16px;line-height:1.6;">How would you like to verify your identity?</p>
             <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
-                <button onclick="chooseForgotMethod('question')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .2s;" onmouseover="this.style.borderColor='#1e4575'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <button id="fp_btn_question" onclick="chooseForgotMethod('question')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:10px;background:white;cursor:pointer;text-align:left;font-family:inherit;transition:border-color .2s;" onmouseover="this.style.borderColor='#1e4575'" onmouseout="this.style.borderColor='#e2e8f0'">
                     <div style="width:36px;height:36px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                         <svg fill="none" stroke="#1e4575" viewBox="0 0 24 24" style="width:18px;height:18px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     </div>
@@ -521,11 +521,23 @@ function checkPwdStrength(val) {
             <p style="font-size:12px;color:#64748b;margin-bottom:16px;">Identity verified. Set your new password.</p>
             <div style="margin-bottom:12px;">
                 <label style="display:block;font-size:10px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">New Password</label>
-                <input type="password" id="fp_newpwd" placeholder="Min. 8 characters" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;">
+                <div style="position:relative;">
+                    <input type="password" id="fp_newpwd" placeholder="Min. 8 chars, upper, lower, number, symbol" oninput="fpCheckStrength(this.value)" style="width:100%;padding:11px 40px 11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;">
+                    <button type="button" onclick="fpTogglePwd('fp_newpwd',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;display:flex;align-items:center;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:17px;height:17px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
+                <div id="fp_strength_bar" style="height:3px;border-radius:2px;margin-top:4px;background:#e2e8f0;overflow:hidden;"><div id="fp_strength_fill" style="height:100%;width:0;transition:width .3s,background .3s;"></div></div>
+                <div id="fp_strength_text" style="font-size:10px;color:#94a3b8;margin-top:2px;"></div>
             </div>
             <div style="margin-bottom:14px;">
                 <label style="display:block;font-size:10px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">Confirm Password</label>
-                <input type="password" id="fp_confirmpwd" placeholder="Repeat new password" style="width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;">
+                <div style="position:relative;">
+                    <input type="password" id="fp_confirmpwd" placeholder="Repeat new password" style="width:100%;padding:11px 40px 11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;box-sizing:border-box;font-family:inherit;">
+                    <button type="button" onclick="fpTogglePwd('fp_confirmpwd',this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9ca3af;padding:4px;display:flex;align-items:center;">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:17px;height:17px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </button>
+                </div>
             </div>
             <div id="fp_error3" style="color:#dc2626;font-size:11px;margin-bottom:10px;display:none;"></div>
             <button onclick="forgotStep3()" id="fp_btn3" style="width:100%;padding:11px;background:linear-gradient(135deg,#16a34a,#22c55e);color:white;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Reset Password</button>
@@ -534,7 +546,7 @@ function checkPwdStrength(val) {
 </div>
 
 <script>
-var _fpToken = '', _fpEmail = '';
+var _fpToken = '', _fpEmail = '', _fpHasQuestion = false;
 
 function showForgotModal() {
     document.getElementById('forgotModal').style.display = 'flex';
@@ -596,16 +608,25 @@ function forgotStep1() {
     if (!email) { showFpError(1,'Please enter your email address.'); return; }
     var btn = document.getElementById('fp_btn1');
     btn.disabled = true; btn.textContent = 'Checking...';
-    // Just verify email exists, then show method selection
     fetch('/forgot-password/question', {
         method:'POST',
         headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]')?.content||''},
         body:JSON.stringify({email, check_only: true})
     }).then(r=>r.json()).then(d=>{
         btn.disabled=false; btn.textContent='Continue';
-        if(d.success || d.question){
+        if(d.success){
             _fpEmail = email;
+            _fpHasQuestion = !!d.has_question;
             document.getElementById('fp_error1b').style.display = 'none';
+            // Hide security question option if user has no security question set
+            var qBtn = document.getElementById('fp_btn_question');
+            if (qBtn) {
+                if (!_fpHasQuestion) {
+                    qBtn.style.display = 'none';
+                } else {
+                    qBtn.style.display = 'flex';
+                }
+            }
             document.getElementById('forgotStep1').style.display = 'none';
             document.getElementById('forgotStep1b').style.display = 'block';
             document.getElementById('forgotModalTitle').textContent = 'Choose Method';
@@ -628,6 +649,8 @@ function forgotStep2() {
             document.getElementById('fp_newpwd').value='';
             document.getElementById('fp_confirmpwd').value='';
             document.getElementById('fp_error3').style.display='none';
+            document.getElementById('fp_strength_fill').style.width='0';
+            document.getElementById('fp_strength_text').textContent='';
             document.getElementById('forgotStep2').style.display='none';
             document.getElementById('forgotStep3').style.display='block';
             document.getElementById('forgotModalTitle').textContent='New Password';
@@ -638,6 +661,15 @@ function forgotStep3() {
     var pwd = document.getElementById('fp_newpwd').value;
     var cpwd = document.getElementById('fp_confirmpwd').value;
     if(pwd.length < 8){ showFpError(3,'Password must be at least 8 characters.'); return; }
+    // Enforce strong password
+    var hasUpper = /[A-Z]/.test(pwd);
+    var hasLower = /[a-z]/.test(pwd);
+    var hasNum   = /[0-9]/.test(pwd);
+    var hasSym   = /[^A-Za-z0-9]/.test(pwd);
+    if(!hasUpper||!hasLower||!hasNum||!hasSym){
+        showFpError(3,'Password must include uppercase, lowercase, number, and symbol.');
+        return;
+    }
     if(pwd !== cpwd){ showFpError(3,'Passwords do not match.'); return; }
     var btn = document.getElementById('fp_btn3');
     btn.disabled=true; btn.textContent='Resetting...';
@@ -656,6 +688,40 @@ function forgotStep3() {
 function showFpError(step, msg) {
     var el = document.getElementById('fp_error'+step);
     el.textContent = msg; el.style.display = 'block';
+}
+function fpCheckStrength(val) {
+    var fill = document.getElementById('fp_strength_fill');
+    var text = document.getElementById('fp_strength_text');
+    if (!fill) return;
+    var has8   = val.length >= 8;
+    var hasUpper = /[A-Z]/.test(val);
+    var hasLower = /[a-z]/.test(val);
+    var hasNum   = /[0-9]/.test(val);
+    var hasSym   = /[^A-Za-z0-9]/.test(val);
+    var score = [has8, hasUpper, hasLower, hasNum, hasSym].filter(Boolean).length;
+    var colors = ['#ef4444','#f97316','#eab308','#22c55e','#16a34a'];
+    var labels = ['Very Weak','Weak','Fair','Strong','Very Strong'];
+    fill.style.width = ((score/5)*100) + '%';
+    fill.style.background = colors[score-1] || '#e2e8f0';
+    if (!val.length) { text.textContent=''; return; }
+    var reqs=[];
+    if(!has8) reqs.push('8+ chars');
+    if(!hasUpper) reqs.push('uppercase');
+    if(!hasLower) reqs.push('lowercase');
+    if(!hasNum) reqs.push('number');
+    if(!hasSym) reqs.push('symbol');
+    text.style.color = colors[score-1]||'#94a3b8';
+    text.textContent = (labels[score-1]||'') + (reqs.length ? ' — needs: '+reqs.join(', ') : ' ✓');
+}
+function fpTogglePwd(id, btn) {
+    var inp = document.getElementById(id);
+    if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.style.color = '#1e4575';
+    } else {
+        inp.type = 'password';
+        btn.style.color = '#9ca3af';
+    }
 }
 </script>
 <div id="loginToast" style="display:none;position:fixed;top:24px;right:24px;z-index:99999;min-width:320px;max-width:420px;background:white;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.18);overflow:hidden;animation:loginToastIn .35s cubic-bezier(.34,1.56,.64,1) both;">
@@ -724,6 +790,29 @@ function toggleLoginPwd() {
         hide.style.display = 'none';
     }
 }
+
+// Auto-detect reset_token in URL and open password reset form
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    var token = params.get('reset_token');
+    var email = params.get('email');
+    if (token && email) {
+        // Pre-fill email and open forgot modal at Step 3
+        _fpEmail = email;
+        _fpToken = token;
+        document.getElementById('fp_email').value = email;
+        // Show modal at step 3 directly
+        document.getElementById('forgotStep1').style.display = 'none';
+        document.getElementById('forgotStep1b').style.display = 'none';
+        document.getElementById('forgotStep1c').style.display = 'none';
+        document.getElementById('forgotStep2').style.display = 'none';
+        document.getElementById('forgotStep3').style.display = 'block';
+        document.getElementById('forgotModalTitle').textContent = 'Set New Password';
+        document.getElementById('forgotModal').style.display = 'flex';
+        // Clean URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+});
 </script>
 </body>
 </html>
