@@ -279,6 +279,10 @@ class AuthController extends Controller
         if (!$user->security_question) {
             return response()->json(['success' => false, 'message' => 'No security question set for this account. Please contact your administrator to reset your password.'], 422);
         }
+        // check_only = just verify email exists and has security question
+        if ($request->input('check_only')) {
+            return response()->json(['success' => true, 'question' => $user->security_question]);
+        }
         return response()->json(['success' => true, 'question' => $user->security_question]);
     }
 
@@ -361,5 +365,39 @@ class AuthController extends Controller
         } catch (\Exception $e) {}
 
         return response()->json(['success' => true]);
+    }
+
+    public function resetPasswordByQuestion(Request $request)
+    {
+        $request->validate([
+            'email'                 => 'required|email',
+            'token'                 => 'required|string',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        // Verify token
+        $record = \DB::table('password_reset_tokens')
+            ->where('email', $request->email)
+            ->first();
+
+        if (!$record || !\Hash::check($request->token, $record->token)) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired token. Please start over.'], 422);
+        }
+
+        // Check token age (15 minutes)
+        if (\Carbon\Carbon::parse($record->created_at)->addMinutes(15)->isPast()) {
+            \DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+            return response()->json(['success' => false, 'message' => 'Token expired. Please start over.'], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'User not found.'], 422);
+        }
+
+        $user->update(['password' => \Hash::make($request->password)]);
+        \DB::table('password_reset_tokens')->where('email', $request->email)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Password reset successfully.']);
     }
 }
