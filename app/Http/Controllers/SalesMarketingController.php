@@ -392,7 +392,13 @@ class SalesMarketingController extends Controller
 
         $commissionRequest = CommissionRequestSales::findOrFail($id);
         $oldStatus = $commissionRequest->status;
-        $validated = $request->validate($this->validationRules());
+
+        try {
+            $validated = $request->validate($this->validationRules());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $msg = collect($e->errors())->flatten()->first();
+            return response()->json(['error' => $msg], 422);
+        }
 
         // Preserve downpayment fields — never overwrite from the edit form
         unset(
@@ -420,6 +426,9 @@ class SalesMarketingController extends Controller
             );
         }
 
+        if ($request->expectsJson() || $request->isJson() || $request->ajax()) {
+            return response()->json(['success' => true]);
+        }
         return redirect()->back()->with('success', 'Commission request updated successfully!');
     }
 

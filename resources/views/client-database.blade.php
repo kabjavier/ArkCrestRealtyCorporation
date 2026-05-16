@@ -335,8 +335,9 @@
             </div>
             <div style="padding:16px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:flex-end;gap:12px">
                 <button type="button" onclick="document.getElementById('editModal').style.display='none'" style="padding:10px 20px;background:#f3f4f6;color:#374151;border:2px solid #d0d5dd;border-radius:8px;font-weight:600;cursor:pointer">Cancel</button>
-                <button type="submit" style="padding:10px 24px;background:#1e4575;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Save Changes</button>
+                <button type="button" id="editSaveBtn" onclick="submitEditForm()" style="padding:10px 24px;background:#1e4575;color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer">Save Changes</button>
             </div>
+            <div id="editFormError" style="display:none;margin:0 24px 16px;background:#fee2e2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;"></div>
         </form>
     </div>
 </div>
@@ -535,10 +536,64 @@ function editRow(id){
         document.getElementById('edit_client_status').value=d.status??'';
         document.getElementById('edit_date_requested').value=d.date_requested?(d.date_requested+'').split('T')[0]:'';
         document.getElementById('editForm').action=`/client-database/${d.id}`;
+        document.getElementById('editFormError').style.display='none';
         document.getElementById('editModal').style.display='flex';
     }).catch(err=>{
         alert('Failed to load record. Please try again.');
         console.error(err);
+    });
+}
+
+function submitEditForm() {
+    var form = document.getElementById('editForm');
+    var btn  = document.getElementById('editSaveBtn');
+    var errEl= document.getElementById('editFormError');
+
+    // Basic client-side validation
+    var projectName = document.getElementById('edit_project_name').value.trim();
+    var clientName  = document.getElementById('edit_client_name').value.trim();
+    var agentName   = document.getElementById('edit_agent_name').value.trim();
+    var terms       = document.getElementById('edit_terms_of_payment').value.trim();
+    if (!projectName || !clientName || !agentName || !terms) {
+        errEl.textContent = 'Please fill in all required fields (Project Name, Client Name, Agent Name, Terms of Payment).';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    errEl.style.display = 'none';
+
+    var formData = new FormData(form);
+    var action   = form.action;
+
+    fetch(action, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+        body: formData,
+    }).then(r => {
+        if (r.redirected || r.ok) {
+            // Success — reload page
+            window.location.reload();
+        } else {
+            return r.text().then(text => {
+                btn.disabled = false;
+                btn.textContent = 'Save Changes';
+                // Try to parse JSON error
+                try {
+                    var json = JSON.parse(text);
+                    errEl.textContent = json.error || json.message || 'Failed to save. Please try again.';
+                } catch(e) {
+                    errEl.textContent = 'Failed to save. Please try again. (Status: ' + r.status + ')';
+                }
+                errEl.style.display = 'block';
+            });
+        }
+    }).catch(() => {
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+        errEl.textContent = 'Network error. Please try again.';
+        errEl.style.display = 'block';
     });
 }
 
