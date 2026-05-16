@@ -369,8 +369,23 @@ class SalesMarketingController extends Controller
 
     public function update(Request $request, $id)
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
-            return response()->json(['error' => 'Admin permission required.'], 403);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        // Allow if admin OR has an approved permission request for this record
+        if (!$user->isAdmin()) {
+            $hasPermission = \App\Models\PermissionRequest::where('user_id', $user->id)
+                ->where('action', 'edit')
+                ->where('record_id', $id)
+                ->where('status', 'approved')
+                ->exists();
+
+            if (!$hasPermission) {
+                return response()->json(['error' => 'Admin permission required.'], 403);
+            }
         }
 
         $commissionRequest = CommissionRequestSales::findOrFail($id);
@@ -596,8 +611,22 @@ class SalesMarketingController extends Controller
 
     public function destroy($id)
     {
-        if (!auth()->check() || !auth()->user()->isAdmin()) {
-            return response()->json(['error' => 'Admin permission required.'], 403);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated.'], 401);
+        }
+
+        if (!$user->isAdmin()) {
+            $hasPermission = \App\Models\PermissionRequest::where('user_id', $user->id)
+                ->where('action', 'delete')
+                ->where('record_id', $id)
+                ->where('status', 'approved')
+                ->exists();
+
+            if (!$hasPermission) {
+                return response()->json(['error' => 'Admin permission required.'], 403);
+            }
         }
 
         $record = CommissionRequestSales::findOrFail($id);
