@@ -119,6 +119,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/human-resource', [App\Http\Controllers\HumanResourceController::class, 'index'])->name('human-resource')->middleware('page.visible');
     Route::get('/human-resource/employee-data', [App\Http\Controllers\HumanResourceController::class, 'employeeData'])->name('hr.employee-data')->middleware('page.visible');
     Route::get('/human-resource/contact-list', [App\Http\Controllers\HumanResourceController::class, 'contactList'])->name('hr.contact-list')->middleware('page.visible');
+
+    // HR Forms (save/load)
+    Route::post('/api/hr-forms', [App\Http\Controllers\HrFormController::class, 'store'])->name('hr-forms.store');
+    Route::get('/api/hr-forms', [App\Http\Controllers\HrFormController::class, 'index'])->name('hr-forms.index');
+    Route::delete('/api/hr-forms/{id}', [App\Http\Controllers\HrFormController::class, 'destroy'])->name('hr-forms.destroy');
     Route::get('/forms', [App\Http\Controllers\FormsController::class, 'index'])->name('forms')->middleware('page.visible');
     Route::get('/forms/site-visit', [App\Http\Controllers\FormsController::class, 'siteVisit'])->name('forms.site-visit');
     Route::get('/api/forms/control-number', [App\Http\Controllers\FormsController::class, 'nextControlNumber']);

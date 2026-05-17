@@ -242,7 +242,12 @@
                                     <button type="submit" style="width:60px;height:28px;background:#ef4444;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">DELETE</button>
                                 </form>
                                 @else
+                                @php $dpLocked = in_array($req->downpayment_status, ['Paid', 'Spot Paid']); @endphp
+                                @if($dpLocked)
+                                <button disabled title="Locked — downpayment has been paid. Only admin can edit." style="width:60px;height:28px;background:#9ca3af;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:not-allowed;opacity:0.7;">🔒 EDIT</button>
+                                @else
                                 <button onclick="staffEditRow({{ $req->id }}, '{{ addslashes($req->client_name ?? '') }} - {{ addslashes($req->project_name ?? '') }}')" style="width:60px;height:28px;background:#f59e0b;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">EDIT</button>
+                                @endif
                                 <form action="{{ route('client-database.destroy', $req->id) }}" method="POST" style="display:inline" onsubmit="return staffDeleteConfirm(event, {{ $req->id }}, '{{ addslashes($req->client_name ?? '') }} - {{ addslashes($req->project_name ?? '') }}')">
                                     @csrf @method('DELETE')
                                     <button type="submit" style="width:60px;height:28px;background:#ef4444;color:white;border:none;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer">DELETE</button>
