@@ -103,9 +103,10 @@ class DepartmentalExpensesController extends Controller
             return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         }
 
-        // Check period lock
-        if (!empty($validated['date_requested'])) {
-            $d = Carbon::parse($validated['date_requested']);
+        // Check period lock — based on date_released (the period expenses are counted in)
+        $lockDate = !empty($validated['date_released']) ? $validated['date_released'] : ($validated['date_requested'] ?? null);
+        if (!empty($lockDate)) {
+            $d = Carbon::parse($lockDate);
             if (\App\Models\PeriodLock::isLocked((int)$d->month, (int)$d->year)) {
                 return response()->json(['success' => false, 'message' => date('F Y', mktime(0,0,0,$d->month,1,$d->year)) . ' is locked. No changes allowed for this period.'], 422);
             }
@@ -190,7 +191,8 @@ class DepartmentalExpensesController extends Controller
         try {
             $DepartmentalExpense = DepartmentalExpense::create($validated);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to save. Please try again.'], 500);
+            \Log::error('DepartmentalExpense create error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
         }
 
         ActivityLog::log('create', 'Departmental Expenses', "Added expense '{$validated['category']}' for {$validated['department']} by {$validated['requestor_name']} (₱" . number_format($validated['requested_amount'] ?? 0, 2) . ")");
