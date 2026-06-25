@@ -14,7 +14,6 @@ class SendNoteReminders extends Command
 
     public function handle(): void
     {
-        // 1. Send reminders for notes due now OR overdue today (not yet sent)
         $due = Note::with('user')
             ->whereNotNull('note_date')
             ->whereNotNull('reminder_time')
@@ -42,7 +41,6 @@ class SendNoteReminders extends Command
             }
         }
 
-        // 2. Send reminders for notes due tomorrow — at 6AM and 5PM
         $currentTime = now()->format('H:i');
         $isMorning = ($currentTime >= '06:00' && $currentTime <= '06:01');
         $isEvening = ($currentTime >= '17:00' && $currentTime <= '17:01');
@@ -73,7 +71,6 @@ class SendNoteReminders extends Command
             }
         }
 
-        // 3. Send reminders for notes due today — at 6AM only
         if ($isMorning) {
             $today = now()->format('Y-m-d');
             $todayNotes = Note::with('user')
