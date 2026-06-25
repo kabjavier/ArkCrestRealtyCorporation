@@ -55,11 +55,9 @@ class DepartmentalExpensesController extends Controller
     public function index()
     {
         $requests = DepartmentalExpense::orderBy('control_number', 'asc')->orderBy('id', 'asc')->get();
-        
-        // Get departments with their expenses
+
         $departments = \App\Models\Department::with('expenses', 'categories')->get();
-        
-        // Build categories from DB + hardcoded fallback
+
         $categories = [];
         foreach ($departments as $dept) {
             $dbCats = $dept->categories->pluck('name')->toArray();
@@ -67,15 +65,14 @@ class DepartmentalExpensesController extends Controller
                 $categories[$dept->name] = $dbCats;
             }
         }
-        // Merge hardcoded categories for existing departments that have no DB categories
+
         foreach ($this->categories as $key => $cats) {
             $fullName = ['Admin' => 'Administrative', 'HR' => 'Human Resource'][$key] ?? $key;
             if (!isset($categories[$fullName]) || empty($categories[$fullName])) {
                 $categories[$fullName] = $cats;
             }
         }
-        
-        // Get unique requestor names for autocomplete
+
         $requestorNames = DepartmentalExpense::select('requestor_name')
             ->distinct()
             ->orderBy('requestor_name')
@@ -103,7 +100,6 @@ class DepartmentalExpensesController extends Controller
             return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         }
 
-        // Check period lock — based on date_released (the period expenses are counted in)
         $lockDate = !empty($validated['date_released']) ? $validated['date_released'] : ($validated['date_requested'] ?? null);
         if (!empty($lockDate)) {
             $d = Carbon::parse($lockDate);
@@ -111,8 +107,7 @@ class DepartmentalExpensesController extends Controller
                 return response()->json(['success' => false, 'message' => date('F Y', mktime(0,0,0,$d->month,1,$d->year)) . ' is locked. No changes allowed for this period.'], 422);
             }
         }
-        
-        // Validate date logic: date_requested <= date_released <= date_of_amount_returned
+
         if (!empty($validated['date_requested']) && !empty($validated['date_released'])) {
             $dateRequested = \Carbon\Carbon::parse($validated['date_requested']);
             $dateReleased = \Carbon\Carbon::parse($validated['date_released']);
@@ -149,7 +144,6 @@ class DepartmentalExpensesController extends Controller
             }
         }
 
-        // Generate unique control number - reuse gaps from deleted records
         $date = $validated['date_requested'] ? Carbon::parse($validated['date_requested']) : Carbon::now();
         $month = $date->format('m');
         $year  = $date->format('y');
@@ -163,8 +157,7 @@ class DepartmentalExpensesController extends Controller
         });
 
         $validated['control_number'] = $controlNumber;
-        
-        // Convert empty strings to null for date fields
+
         if (empty($validated['date_requested'])) {
             $validated['date_requested'] = null;
         }
@@ -174,16 +167,14 @@ class DepartmentalExpensesController extends Controller
         if (empty($validated['date_of_amount_returned'])) {
             $validated['date_of_amount_returned'] = null;
         }
-        
-        // Convert empty strings to null for numeric fields
+
         if (empty($validated['total_expenses'])) {
             $validated['total_expenses'] = null;
         }
         if (empty($validated['amount_returned'])) {
             $validated['amount_returned'] = null;
         }
-        
-        // Auto-calculate amount_returned if total_expenses is provided
+
         if (isset($validated['total_expenses']) && $validated['total_expenses'] > 0) {
             $validated['amount_returned'] = $validated['requested_amount'] - $validated['total_expenses'];
         }
@@ -207,7 +198,6 @@ class DepartmentalExpensesController extends Controller
     {
         $DepartmentalExpense = DepartmentalExpense::findOrFail($id);
 
-        // Check period lock on existing record
         if ($DepartmentalExpense->date_requested) {
             $d = Carbon::parse($DepartmentalExpense->date_requested);
             if (\App\Models\PeriodLock::isLocked((int)$d->month, (int)$d->year)) {
@@ -232,8 +222,7 @@ class DepartmentalExpensesController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['success' => false, 'message' => $e->validator->errors()->first()], 422);
         }
-        
-        // Validate date logic: date_requested <= date_released <= date_of_amount_returned
+
         if (!empty($validated['date_requested']) && !empty($validated['date_released'])) {
             $dateRequested = \Carbon\Carbon::parse($validated['date_requested']);
             $dateReleased = \Carbon\Carbon::parse($validated['date_released']);
@@ -269,8 +258,7 @@ class DepartmentalExpensesController extends Controller
                 ], 422);
             }
         }
-        
-        // Check if control number is being changed and if it's unique
+
         if ($validated['control_number'] !== $DepartmentalExpense->control_number) {
             $existingRequest = DepartmentalExpense::where('control_number', $validated['control_number'])
                 ->where('id', '!=', $id)
@@ -283,8 +271,7 @@ class DepartmentalExpensesController extends Controller
                 ], 422);
             }
         }
-        
-        // Convert empty strings to null for date fields
+
         if (empty($validated['date_requested'])) {
             $validated['date_requested'] = null;
         }
@@ -294,16 +281,14 @@ class DepartmentalExpensesController extends Controller
         if (empty($validated['date_of_amount_returned'])) {
             $validated['date_of_amount_returned'] = null;
         }
-        
-        // Convert empty strings to null for numeric fields
+
         if (empty($validated['total_expenses'])) {
             $validated['total_expenses'] = null;
         }
         if (empty($validated['amount_returned'])) {
             $validated['amount_returned'] = null;
         }
-        
-        // Auto-calculate amount_returned if total_expenses is provided
+
         if (isset($validated['total_expenses']) && $validated['total_expenses'] > 0) {
             $validated['amount_returned'] = $validated['requested_amount'] - $validated['total_expenses'];
         }
@@ -339,7 +324,6 @@ class DepartmentalExpensesController extends Controller
     {
         $DepartmentalExpense = DepartmentalExpense::findOrFail($id);
 
-        // Check period lock
         if ($DepartmentalExpense->date_requested) {
             $d = Carbon::parse($DepartmentalExpense->date_requested);
             if (\App\Models\PeriodLock::isLocked((int)$d->month, (int)$d->year)) {
@@ -369,7 +353,6 @@ class DepartmentalExpensesController extends Controller
         ]);
     }
 
-    // API endpoint for department autocomplete
     public function getDepartments(Request $request)
     {
         $search = $request->get('search', '');
@@ -386,7 +369,6 @@ class DepartmentalExpensesController extends Controller
         return response()->json($departments);
     }
 
-    // API endpoint for category autocomplete
     public function getCategories(Request $request)
     {
         $search = $request->get('search', '');
@@ -409,21 +391,17 @@ class DepartmentalExpensesController extends Controller
     
     public function printLiquidation(Request $request)
     {
-        // Get all visible rows data from query parameters
         $controlNumbers = $request->query('controls', '');
         
         if (empty($controlNumbers)) {
-            // If no specific control numbers, get all requests
             $requests = DepartmentalExpense::orderBy('control_number', 'asc')->get();
         } else {
-            // Get specific control numbers
             $controlNumbersArray = explode(',', $controlNumbers);
             $requests = DepartmentalExpense::whereIn('control_number', $controlNumbersArray)
                 ->orderBy('control_number', 'asc')
                 ->get();
         }
         
-        // Group by control number
         $groupedRequests = $requests->groupBy('control_number');
         
         return view('liquidation-print', compact('groupedRequests'));
