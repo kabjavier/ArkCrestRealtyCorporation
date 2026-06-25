@@ -31,7 +31,6 @@ class SendCommissionReleaseReminders extends Command
 
         $this->info("Found {$releases->count()} release(s) for {$displayDate}. Sending reminders...");
 
-        // Load SMTP config from DB settings
         $s = \DB::table('app_settings')->pluck('value', 'key');
         $smtpHost     = $s['smtp_host']     ?? config('mail.mailers.smtp.host');
         $smtpPort     = $s['smtp_port']     ?? config('mail.mailers.smtp.port');
@@ -44,7 +43,6 @@ class SendCommissionReleaseReminders extends Command
             return;
         }
 
-        // Override mailer config dynamically
         config([
             'mail.mailers.smtp.host'       => $smtpHost,
             'mail.mailers.smtp.port'       => $smtpPort,
@@ -56,7 +54,6 @@ class SendCommissionReleaseReminders extends Command
             'mail.default'                 => 'smtp',
         ]);
 
-        // Get notification emails from settings
         $rawEmails  = $s['notification_email'] ?? '';
         $recipients = array_filter(array_map('trim', explode(',', $rawEmails)));
 
