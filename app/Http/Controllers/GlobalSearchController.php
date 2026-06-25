@@ -33,7 +33,6 @@ class GlobalSearchController extends Controller
         $canSee = fn(string $page) => !in_array($page, $hidden);
         $like   = "%{$query}%";
 
-        // ── 1. Commission Monitoring ─────────────────────────────────────
         if ($canSee('commission-monitoring')) {
             try {
                 CommissionRequest::where(function ($q) use ($like) {
@@ -62,7 +61,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 2. Client Database ───────────────────────────────────────────
         if ($canSee('client-database')) {
             try {
                 CommissionRequestSales::where(function ($q) use ($like) {
@@ -90,10 +88,9 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 3. Site Visit Database ───────────────────────────────────────
         if ($canSee('site-visit-database')) {
             try {
-                // Only use columns that are guaranteed to exist
+
                 TripSchedule::where(function ($q) use ($like) {
                     $q->where('client_name',    'like', $like)
                       ->orWhere('agent_name',   'like', $like)
@@ -114,7 +111,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 4. Departmental Expenses ─────────────────────────────────────
         if ($canSee('departments')) {
             try {
                 DepartmentalExpense::where(function ($q) use ($like) {
@@ -139,7 +135,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 5. Summary Reports ───────────────────────────────────────────
         if ($canSee('summary-report')) {
             try {
                 $months = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -163,7 +158,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 6. HR Forms ──────────────────────────────────────────────────
         if ($canSee('human-resource')) {
             try {
                 HrForm::where(function ($q) use ($like) {
@@ -182,7 +176,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 7. Notes (current user only) ─────────────────────────────────
         try {
             Note::where('user_id', $user->id)
                 ->whereNull('completed_at')
@@ -201,7 +194,6 @@ class GlobalSearchController extends Controller
             });
         } catch (\Exception $e) {}
 
-        // ── 8. Personnel Contacts ────────────────────────────────────────
         if ($canSee('human-resource')) {
             try {
                 PersonnelContact::where(function ($q) use ($like) {
@@ -223,7 +215,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 9. Clients ───────────────────────────────────────────────────
         if ($canSee('client-database')) {
             try {
                 Client::where(function ($q) use ($like) {
@@ -242,7 +233,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 10. Reserved Clients ─────────────────────────────────────────
         if ($canSee('client-database')) {
             try {
                 ReservedClient::where(function ($q) use ($like) {
@@ -263,7 +253,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 11. Properties ───────────────────────────────────────────────
         try {
             Property::where(function ($q) use ($like) {
                 $q->where('name',      'like', $like)
@@ -280,7 +269,6 @@ class GlobalSearchController extends Controller
             });
         } catch (\Exception $e) {}
 
-        // ── 12. Sales Agents ─────────────────────────────────────────────
         if ($canSee('sales-marketing')) {
             try {
                 SalesAgent::where(function ($q) use ($like) {
@@ -299,7 +287,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 13. Users / Employee Directory (admin only) ──────────────────
         if ($isAdmin) {
             try {
                 User::where(function ($q) use ($like) {
@@ -321,7 +308,6 @@ class GlobalSearchController extends Controller
             } catch (\Exception $e) {}
         }
 
-        // ── 14. Page navigation ──────────────────────────────────────────
         $allPages = [
             ['Finance Dashboard',        '/dashboard',                   'home',     'dashboard'],
             ['Departmental Expenses',     '/departments',                 'building', 'departments'],
