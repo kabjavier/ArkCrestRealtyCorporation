@@ -52,7 +52,6 @@ class CommissionMonitoringController extends Controller
                 'remarks'            => 'nullable|string',
             ]);
 
-            // Auto-generate control number for commission monitoring
             $month = now()->format('m');
             $year  = now()->format('y');
             $count = 1;
@@ -100,7 +99,6 @@ class CommissionMonitoringController extends Controller
             $user   = auth()->user();
             $record = CommissionRequest::findOrFail($id);
 
-            // Staff must have an approved permission for this specific record
             if (!$user->isAdmin()) {
                 $hasPermission = \App\Models\PermissionRequest::where('user_id', $user->id)
                     ->where('action', 'edit')
@@ -140,12 +138,10 @@ class CommissionMonitoringController extends Controller
             $record->update($validated);
             \App\Models\ActivityLog::log('update', 'Commission Monitoring', "Updated commission request ID: {$id}");
 
-            // Consume the one-time permission after successful edit
             if (!$user->isAdmin()) {
                 \App\Http\Controllers\PermissionRequestController::consume($user->id, 'edit', (int) $id);
             }
 
-            // Send email if status changed to Released
             if (isset($validated['status']) && $validated['status'] === 'Released' && $oldStatus !== 'Released') {
                 \App\Services\AdminEmailNotifier::send(
                     'Commission Released — ' . ($record->client_name ?? ''),
@@ -194,7 +190,6 @@ class CommissionMonitoringController extends Controller
         ]);
         $record->delete();
 
-        // Consume the one-time permission after successful delete
         if (!$user->isAdmin()) {
             \App\Http\Controllers\PermissionRequestController::consume($user->id, 'delete', (int) $id);
         }
