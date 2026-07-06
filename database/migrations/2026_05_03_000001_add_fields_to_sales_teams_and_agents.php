@@ -8,19 +8,25 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('sales_agents', function (Blueprint $table) {
-            $table->boolean('is_active')->default(true)->after('name');
-        });
+        if (!Schema::hasColumn('sales_agents', 'is_active')) {
+            Schema::table('sales_agents', function (Blueprint $table) {
+                $table->boolean('is_active')->default(true)->after('name');
+            });
+        }
 
-        Schema::table('sales_teams', function (Blueprint $table) {
-            $table->string('sales_manager')->nullable()->change();
-        });
+        if (Schema::hasColumn('sales_teams', 'sales_manager')) {
+            Schema::table('sales_teams', function (Blueprint $table) {
+                $table->string('sales_manager')->nullable()->change();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('sales_agents', function (Blueprint $table) {
-            $table->dropColumn('is_active');
-        });
+        if (Schema::hasColumn('sales_agents', 'is_active')) {
+            Schema::table('sales_agents', function (Blueprint $table) {
+                $table->dropColumn('is_active');
+            });
+        }
     }
 };
