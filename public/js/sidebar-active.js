@@ -4,6 +4,8 @@
     
     function setActiveSidebar() {
         const currentPath = window.location.pathname;
+        const currentTab = new URLSearchParams(window.location.search).get('tab');
+        const currentPanel = new URLSearchParams(window.location.search).get('panel') || 'profile';
         
         const navItems = document.querySelectorAll('.nav-item[data-page], .nav-subitem[data-page]');
         
@@ -39,13 +41,41 @@
                 isActive = true;
             } else if (page === 'crm' && currentPath.includes('/crm')) {
                 isActive = true;
-            } else if (page === 'forms-site-visit' && currentPath.includes('/forms/site-visit')) {
+            } else if (page === 'forms-budget' && currentPath === '/forms' && currentTab !== 'site-visit') {
+                isActive = true;
+            } else if (page === 'forms-site-visit' && ((currentPath === '/forms' && currentTab === 'site-visit') || currentPath.includes('/forms/site-visit'))) {
                 isActive = true;
             } else if (page === 'arkcrest-sales' && currentPath.includes('/arkcrest-sales')) {
                 isActive = true;
             } else if (page === 'forms' && currentPath === '/forms') {
                 isActive = true;
             } else if (page === 'settings' && currentPath.includes('/settings')) {
+                isActive = true;
+            } else if (page === 'settings-profile' && currentPath.includes('/settings') && currentPanel === 'profile') {
+                isActive = true;
+            } else if (page === 'settings-employee-info' && currentPath.includes('/settings') && currentPanel === 'employee-info') {
+                isActive = true;
+            } else if (page === 'settings-system' && currentPath.includes('/settings') && currentPanel === 'system') {
+                isActive = true;
+            } else if (page === 'settings-notes' && currentPath.includes('/settings') && currentPanel === 'notes') {
+                isActive = true;
+            } else if (page === 'settings-privacy' && currentPath.includes('/settings') && currentPanel === 'privacy') {
+                isActive = true;
+            } else if (page === 'settings-users' && currentPath.includes('/settings') && currentPanel === 'users') {
+                isActive = true;
+            } else if (page === 'settings-visibility' && currentPath.includes('/settings') && currentPanel === 'visibility') {
+                isActive = true;
+            } else if (page === 'settings-activity' && currentPath.includes('/settings') && currentPanel === 'activity') {
+                isActive = true;
+            } else if (page === 'settings-deleted' && currentPath.includes('/settings') && currentPanel === 'deleted') {
+                isActive = true;
+            } else if (page === 'settings-permission-requests' && currentPath.includes('/settings') && currentPanel === 'permission-requests') {
+                isActive = true;
+            } else if (page === 'settings-teams' && currentPath.includes('/settings') && currentPanel === 'teams') {
+                isActive = true;
+            } else if (page === 'settings-properties' && currentPath.includes('/settings') && currentPanel === 'properties') {
+                isActive = true;
+            } else if (page === 'settings-period-lock' && currentPath.includes('/settings') && currentPanel === 'period-lock') {
                 isActive = true;
             } else if (page === 'human-resource' && currentPath === '/human-resource') {
                 isActive = true;
@@ -77,6 +107,14 @@
                         } else if (submenu.id === 'hrSubmenu') {
                             const arrow = document.getElementById('hrArrow');
                             if (arrow) arrow.classList.add('open');
+                        } else if (submenu.id === 'formsSubmenu') {
+                            const arrow = document.getElementById('formsArrow');
+                            if (arrow) arrow.classList.add('open');
+                            localStorage.setItem('formsDropdownOpen', 'true');
+                        } else if (submenu.id === 'settingsSubmenu') {
+                            const arrow = document.getElementById('settingsArrow');
+                            if (arrow) arrow.classList.add('open');
+                            localStorage.setItem('settingsDropdownOpen', 'true');
                         } else {
                             const arrow = document.getElementById('financeArrow');
                             if (arrow) arrow.classList.add('open');

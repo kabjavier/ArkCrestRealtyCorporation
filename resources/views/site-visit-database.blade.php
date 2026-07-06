@@ -108,6 +108,17 @@
 .svd-tab-active{background:white;color:#1e4575;border-color:white;}
 .svd-tab-badge{background:rgba(255,255,255,.25);color:white;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;}
 .svd-tab-active .svd-tab-badge{background:#1e4575;color:white;}
+/* Responsive — this page's stat grid had no mobile rule at all,
+   so 3 fixed equal columns forced the 3rd card off-screen. */
+@media (max-width: 900px) {
+    .svd-stats{grid-template-columns:repeat(2,1fr);gap:14px;}
+}
+@media (max-width: 560px) {
+    .svd-stats{grid-template-columns:1fr;gap:12px;}
+    .stat-card{padding:16px;gap:14px;}
+    .stat-icon{width:46px;height:46px;font-size:20px;}
+    .stat-val{font-size:22px;}
+}
 </style>
 
 <div class="svd-header">
@@ -299,13 +310,11 @@
                         <button type="submit" class="btn-reject">&#10005; Cancel</button>
                     </form>
                     @endif
-                    {{-- Delete (admin only) --}}
-                    @if(auth()->user()->isAdmin())
+                    {{-- Delete --}}
                     <form method="POST" action="{{ route('site-visit-database.destroy', $r->id) }}" onsubmit="return confirm('Delete this record?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-delete">Delete</button>
                     </form>
-                    @endif
                     {{-- Print --}}
                     <button class="btn-print" onclick="window.print()">
                         <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
