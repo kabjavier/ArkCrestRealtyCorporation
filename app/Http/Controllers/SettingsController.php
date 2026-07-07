@@ -14,13 +14,20 @@ class SettingsController extends Controller
 {
     // Finance pages hidden by default for staff role
     const STAFF_DEFAULT_HIDDEN = [
-        'dashboard',
-        'departments',
-        'summary-report',
-        'commission-monitoring',
-        'commission-monitoring.dashboard',
-        'calendar',
-    ];
+    'dashboard',
+    'departments',
+    'summary-report',
+    'commission-monitoring',
+    'commission-monitoring.dashboard',
+    'calendar',
+    'settings.users',
+    'settings.visibility',
+    'settings.activity',
+    'settings.deleted',
+    'settings.permissions',
+    'settings.teams',
+    'settings.period-lock',
+];
 
     public function index()
     {
@@ -512,18 +519,12 @@ class SettingsController extends Controller
         $user = auth()->user();
         $request->validate([
             'name'     => 'required|string|max:255',
-            'password' => ['nullable', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
             'avatar'   => 'nullable|image|max:2048',
         ]);
 
         $data = ['name' => $request->name];
 
-        if ($request->filled('password')) {
-            $data['password'] = bcrypt($request->password);
-        }
-
         if ($request->hasFile('avatar')) {
-            // Delete old avatar
             if ($user->avatar) {
                 \Storage::disk('public')->delete($user->avatar);
             }
@@ -534,6 +535,24 @@ class SettingsController extends Controller
 
         $user->update($data);
         return redirect()->route('settings')->with('success', 'Profile updated successfully.')->with('open_section', 'profile');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $user = auth()->user();
+
+        $request->validate([
+            'current_password' => ['required'],
+            'password' => ['required', 'confirmed', \Illuminate\Validation\Rules\Password::min(8)->mixedCase()->numbers()->symbols()],
+        ]);
+
+        if (!\Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Your current password is incorrect.'])->with('open_section', 'profile');
+        }
+
+        $user->update(['password' => bcrypt($request->password)]);
+
+        return redirect()->route('settings')->with('success', 'Password updated successfully.')->with('open_section', 'profile');
     }
 
     public function savePrivacyPolicy(Request $request)
@@ -554,10 +573,18 @@ class SettingsController extends Controller
         if (!auth()->user()->isAdmin()) abort(403);
 
         $log = ActivityLog::findOrFail($logId);
+        $result = $this->restoreLogRecord($log);
+
+        return response()->json($result, $result['success'] ? 200 : 422);
+    }
+
+    // Shared logic: restore a single activity-log-based deleted record. Returns ['success'=>bool,'message'=>string]
+    private function restoreLogRecord(ActivityLog $log): array
+    {
         $meta = $log->meta;
 
         if (!$meta || empty($meta)) {
-            return response()->json(['success' => false, 'message' => 'No record data available to restore.'], 422);
+            return ['success' => false, 'message' => 'No record data available to restore.'];
         }
 
         try {
@@ -573,7 +600,7 @@ class SettingsController extends Controller
                     if ($existing && $existing->trashed()) {
                         $existing->restore();
                         $log->delete();
-                        return response()->json(['success' => true, 'message' => 'Record restored successfully.']);
+                        return ['success' => true, 'message' => 'Record restored successfully.'];
                     }
                 }
                 $fillable = ['control_number','requestor_name','department','category','date_requested',
@@ -581,7 +608,7 @@ class SettingsController extends Controller
                 $data = array_filter(array_intersect_key($restoreMeta, array_flip($fillable)), fn($v) => $v !== null);
                 \App\Models\CommissionRequest::create($data);
                 $log->delete();
-                return response()->json(['success' => true, 'message' => 'Record restored to Departmental Expenses.']);
+                return ['success' => true, 'message' => 'Record restored to Departmental Expenses.'];
             }
 
             // Sales & Marketing / Client Database
@@ -593,13 +620,64 @@ class SettingsController extends Controller
                 $data = array_filter(array_intersect_key($restoreMeta, array_flip($fillable)), fn($v) => $v !== null);
                 \App\Models\CommissionRequestSales::create($data);
                 $log->delete();
-                return response()->json(['success' => true, 'message' => 'Record restored to Client Database.']);
+                return ['success' => true, 'message' => 'Record restored to Client Database.'];
             }
 
-            return response()->json(['success' => false, 'message' => "Restore not supported for module: {$module}"], 422);
+            // Human Resource (saved HR forms: day-off, absences, voucher)
+            if ($module === 'Human Resource') {
+                $fillable = ['type', 'title', 'data', 'created_by'];
+                $data = array_filter(array_intersect_key($restoreMeta, array_flip($fillable)), fn($v) => $v !== null);
+                \App\Models\HrForm::create($data);
+                $log->delete();
+                return ['success' => true, 'message' => 'Record restored to Human Resource.'];
+            }
+
+            // Site Visit Form (tripping schedules)
+            if ($module === 'Site Visit Form') {
+                $fillable = ['agent_name','team_name','client_name','client_email','client_phone','client_phone_code',
+                    'client_address','property_name','company_name','tripping_date','tripping_time','tripping_type','status'];
+                $data = array_filter(array_intersect_key($restoreMeta, array_flip($fillable)), fn($v) => $v !== null);
+                \App\Models\TripSchedule::create($data);
+                $log->delete();
+                return ['success' => true, 'message' => 'Record restored to Site Visit Form.'];
+            }
+
+            return ['success' => false, 'message' => "Restore not supported for module: {$module}"];
 
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to restore: ' . $e->getMessage()], 500);
+            return ['success' => false, 'message' => 'Failed to restore: ' . $e->getMessage()];
+        }
+    }
+
+    // Restore a soft-deleted Departmental Expense record (used by bulk restore)
+    private function restoreExpenseRecordById($id): array
+    {
+        try {
+            $record = \App\Models\DepartmentalExpense::onlyTrashed()->find($id);
+            if (!$record) {
+                return ['success' => false, 'message' => 'Deleted expense not found.'];
+            }
+            $record->restore();
+            ActivityLog::log('restore', 'Departmental Expenses', "Restored expense '{$record->control_number}'");
+            return ['success' => true, 'message' => 'Expense restored.'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Failed to restore expense: ' . $e->getMessage()];
+        }
+    }
+
+    // Permanently remove a Departmental Expense record (used by bulk delete)
+    private function purgeExpenseRecordById($id): array
+    {
+        try {
+            $record = \App\Models\DepartmentalExpense::onlyTrashed()->find($id);
+            if (!$record) {
+                return ['success' => false, 'message' => 'Deleted expense not found.'];
+            }
+            $record->forceDelete();
+            ActivityLog::log('delete', 'Departmental Expenses', "Permanently deleted expense '{$record->control_number}'");
+            return ['success' => true, 'message' => 'Expense permanently deleted.'];
+        } catch (\Exception $e) {
+            return ['success' => false, 'message' => 'Failed to delete expense: ' . $e->getMessage()];
         }
     }
 
@@ -610,6 +688,87 @@ class SettingsController extends Controller
         $log = ActivityLog::findOrFail($logId);
         $log->delete();
         return response()->json(['success' => true, 'message' => 'Record permanently removed from history.']);
+    }
+
+    // Bulk-restore a mix of activity-log-based and expense-based deleted records.
+    // Expects: items: [{type: 'log'|'expense', id: <int>}, ...]
+    public function bulkRestoreRecords(Request $request)
+    {
+        if (!auth()->user()->isAdmin()) abort(403);
+
+        $request->validate([
+            'items'        => 'required|array|min:1',
+            'items.*.type' => 'required|in:log,expense',
+            'items.*.id'   => 'required|integer',
+        ]);
+
+        $restored = 0;
+        $failed   = [];
+
+        foreach ($request->items as $item) {
+            if ($item['type'] === 'expense') {
+                $result = $this->restoreExpenseRecordById($item['id']);
+            } else {
+                $log = ActivityLog::find($item['id']);
+                $result = $log ? $this->restoreLogRecord($log) : ['success' => false, 'message' => 'Record not found.'];
+            }
+            if ($result['success']) {
+                $restored++;
+            } else {
+                $failed[] = $result['message'];
+            }
+        }
+
+        return response()->json([
+            'success'  => $restored > 0,
+            'restored' => $restored,
+            'failed'   => count($failed),
+            'message'  => "{$restored} record(s) restored" . (count($failed) ? ', ' . count($failed) . ' failed.' : '.'),
+            'errors'   => $failed,
+        ]);
+    }
+
+    // Bulk-permanently-delete a mix of activity-log-based and expense-based deleted records.
+    // Expects: items: [{type: 'log'|'expense', id: <int>}, ...]
+    public function bulkDeleteRecords(Request $request)
+    {
+        if (!auth()->user()->isAdmin()) abort(403);
+
+        $request->validate([
+            'items'        => 'required|array|min:1',
+            'items.*.type' => 'required|in:log,expense',
+            'items.*.id'   => 'required|integer',
+        ]);
+
+        $deleted = 0;
+        $failed  = [];
+
+        foreach ($request->items as $item) {
+            if ($item['type'] === 'expense') {
+                $result = $this->purgeExpenseRecordById($item['id']);
+            } else {
+                $log = ActivityLog::find($item['id']);
+                if (!$log) {
+                    $result = ['success' => false, 'message' => 'Record not found.'];
+                } else {
+                    $log->delete();
+                    $result = ['success' => true, 'message' => 'Removed.'];
+                }
+            }
+            if ($result['success']) {
+                $deleted++;
+            } else {
+                $failed[] = $result['message'];
+            }
+        }
+
+        return response()->json([
+            'success' => $deleted > 0,
+            'deleted' => $deleted,
+            'failed'  => count($failed),
+            'message' => "{$deleted} record(s) permanently deleted" . (count($failed) ? ', ' . count($failed) . ' failed.' : '.'),
+            'errors'  => $failed,
+        ]);
     }
 
     public function lockPeriod(Request $request)

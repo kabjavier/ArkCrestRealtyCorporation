@@ -8,9 +8,15 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <div class="summary-report-page">
-    <!-- Page Title -->
-    <div class="page-header" style="text-align: center; margin-bottom: 30px; padding: 30px; background: linear-gradient(135deg, rgba(30, 69, 117, 0.08), rgba(163, 121, 41, 0.08)); border-radius: 16px; border: 3px solid #1e4575; box-shadow: 0 8px 24px rgba(30, 69, 117, 0.12);">
-        <h2 class="page-title" style="font-size: 36px; font-weight: 700; color: #1e4575; text-transform: uppercase; letter-spacing: 1.5px; background: linear-gradient(135deg, #1e4575, #A37929); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin: 0;">Summary Report</h2>
+    <!-- Page Banner -->
+    <div style="background:linear-gradient(135deg,#1e4575 0%,#2563eb 60%,#1e4575 100%);border-radius:20px;padding:36px 40px;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(30,69,117,.25);">
+        <div style="position:absolute;top:-40px;right:-40px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.06);"></div>
+        <div style="position:absolute;top:40px;right:120px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.04);"></div>
+        <div style="position:relative;z-index:2;">
+            <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Finance</div>
+            <h1 style="font-size:24px;font-weight:700;color:white;margin:0 0 6px;">Summary Report</h1>
+            <p style="font-size:13px;color:rgba(255,255,255,.75);margin:0;">Monthly &amp; yearly financial performance overview</p>
+        </div>
     </div>
 
     <!-- View Toggle Buttons -->
@@ -160,7 +166,7 @@
     </style>
 
     <!-- Summary Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; align-items: stretch;">
         <div class="summary-card">
             <div class="card-icon" style="background: #3b82f6;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,14 +185,11 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
                 </svg>
             </div>
-            <div class="card-content" style="display: flex; flex-direction: column; gap: 15px;">
-                <div>
-                    <div class="card-label">Units</div>
-                    <div class="card-value">{{ number_format($yearlyTotals['units'], 0) }}</div>
-                </div>
-                <div>
-                    <div class="card-label">Gross Sales</div>
-                    <div class="card-value"><span style="font-size: 20px; margin-right: 4px;">₱</span>{{ number_format($yearlyTotals['gross_sales'], 2) }}</div>
+            <div class="card-content">
+                <div class="card-label">Units</div>
+                <div class="card-value">{{ number_format($yearlyTotals['units'], 0) }}</div>
+                <div style="font-size:12px;color:#64748b;margin-top:4px;">
+                    Gross Sales: <strong>₱{{ number_format($yearlyTotals['gross_sales'], 0) }}</strong>
                 </div>
             </div>
         </div>
@@ -205,22 +208,22 @@
     </div>
 
     <!-- Charts Row -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+    <div class="charts-grid">
         <!-- Bar Chart -->
-        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div class="chart-card">
             <h3 style="font-size: 16px; font-weight: 600; color: #1e4575; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                 <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 Department Expenses Breakdown
             </h3>
-            <div style="height: 300px;">
+            <div class="chart-canvas-wrap">
                 <canvas id="barChart"></canvas>
             </div>
         </div>
 
         <!-- Pie Chart -->
-        <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+        <div class="chart-card">
             <h3 style="font-size: 16px; font-weight: 600; color: #1e4575; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                 <svg style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/>
@@ -228,13 +231,49 @@
                 </svg>
                 Expense Distribution
             </h3>
-            <div style="height: 350px; display: flex; align-items: center; justify-content: center;">
+            <div class="chart-canvas-wrap" style="display: flex; align-items: center; justify-content: center;">
                 <canvas id="pieChart"></canvas>
             </div>
         </div>
     </div>
 
     <style>
+    /* Chart Cards */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .chart-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        min-width: 0;
+    }
+
+    .chart-canvas-wrap {
+        position: relative;
+        height: 350px;
+    }
+
+    @media (max-width: 1024px) {
+        .chart-canvas-wrap { height: 300px; }
+        .chart-card { padding: 18px; }
+    }
+
+    @media (max-width: 768px) {
+        .charts-grid { grid-template-columns: 1fr; gap: 16px; }
+        .chart-canvas-wrap { height: 280px; }
+    }
+
+    @media (max-width: 480px) {
+        .chart-canvas-wrap { height: 240px; }
+        .chart-card { padding: 14px; }
+    }
+
     .summary-card {
         background: white;
         border-radius: 12px;

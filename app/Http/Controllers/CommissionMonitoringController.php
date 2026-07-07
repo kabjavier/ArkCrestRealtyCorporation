@@ -33,22 +33,22 @@ class CommissionMonitoringController extends Controller
                 'client_name'        => 'required|string|max:255',
                 'terms_of_payment'   => 'required|string|max:255',
                 'agent_name'         => 'required|string|max:255',
-                'number_of_units'    => 'nullable|integer|min:1',
-                'price_sqm'          => 'nullable|numeric',
-                'lot_area'           => 'nullable|numeric',
-                'discount'           => 'nullable|numeric',
-                'net_tcp'            => 'nullable|numeric',
-                'commission_percent' => 'nullable|numeric',
-                'commission'         => 'nullable|numeric',
-                'mode_of_payment'    => 'nullable|string|max:255',
-                'date_requested'     => 'nullable|date',
+                'number_of_units'    => 'required|integer|min:1',
+                'price_sqm'          => 'required|numeric|min:0',
+                'lot_area'           => 'required|numeric|min:0',
+                'discount'           => 'nullable|numeric|min:0',
+                'net_tcp'            => 'nullable|numeric|min:0',
+                'commission_percent' => 'nullable|numeric|min:0',
+                'commission'         => 'nullable|numeric|min:0',
+                'mode_of_payment'    => 'required|string|max:255',
+                'date_requested'     => 'required|date',
                 'reservation_date'   => 'nullable|date',
                 'date_released'      => 'nullable|date',
                 'status'             => 'nullable|string|max:50',
-                'payment_type'       => 'nullable|string|max:50',
-                'value_of_payment_terms' => 'nullable|numeric',
-                'payment_type'       => 'nullable|string|max:50',
-                'value_of_payment_terms' => 'nullable|numeric',
+                'payment_type'       => 'required|string|max:50',
+                'value_of_payment_terms' => 'nullable|numeric|min:0',
+                'payment_type'       => 'required|string|max:50',
+                'value_of_payment_terms' => 'nullable|numeric|min:0',
                 'remarks'            => 'nullable|string',
             ]);
 
@@ -99,48 +99,33 @@ class CommissionMonitoringController extends Controller
             $user   = auth()->user();
             $record = CommissionRequest::findOrFail($id);
 
-            if (!$user->isAdmin()) {
-                $hasPermission = \App\Models\PermissionRequest::where('user_id', $user->id)
-                    ->where('action', 'edit')
-                    ->where('record_id', $id)
-                    ->where('status', 'approved')
-                    ->exists();
-                if (!$hasPermission) {
-                    return response()->json(['success' => false, 'message' => 'Admin permission required.'], 403);
-                }
-            }
-
             $validated = $request->validate([
-                'project_name'      => 'nullable|string|max:255',
-                'property_details'  => 'nullable|string|max:255',
-                'client_name'       => 'nullable|string|max:255',
-                'terms_of_payment'  => 'nullable|string|max:255',
-                'agent_name'        => 'nullable|string|max:255',
-                'number_of_units'   => 'nullable|integer',
-                'price_sqm'         => 'nullable|numeric',
-                'lot_area'          => 'nullable|numeric',
-                'discount'          => 'nullable|numeric',
-                'net_tcp'           => 'nullable|numeric',
-                'commission_percent'=> 'nullable|numeric',
-                'commission'        => 'nullable|numeric',
-                'mode_of_payment'   => 'nullable|string|max:255',
-                'date_requested'    => 'nullable|date',
-                'reservation_date'  => 'nullable|date',
-                'date_released'     => 'nullable|date',
-                'status'            => 'nullable|string|max:50',
-                'payment_type'      => 'nullable|string|max:50',
-                'value_of_payment_terms' => 'nullable|numeric',
-                'payment_type'      => 'nullable|string|max:50',
-                'value_of_payment_terms' => 'nullable|numeric',
-                'remarks'           => 'nullable|string',
+                'project_name'       => 'required|string|max:255',
+                'property_details'   => 'nullable|string|max:255',
+                'client_name'        => 'required|string|max:255',
+                'terms_of_payment'   => 'required|string|max:255',
+                'agent_name'         => 'required|string|max:255',
+                'number_of_units'    => 'required|integer|min:1',
+                'price_sqm'          => 'required|numeric|min:0',
+                'lot_area'           => 'required|numeric|min:0',
+                'discount'           => 'nullable|numeric|min:0',
+                'net_tcp'            => 'nullable|numeric|min:0',
+                'commission_percent' => 'nullable|numeric|min:0',
+                'commission'         => 'nullable|numeric|min:0',
+                'mode_of_payment'    => 'required|string|max:255',
+                'date_requested'     => 'required|date',
+                'reservation_date'   => 'nullable|date',
+                'date_released'      => 'nullable|date',
+                'status'             => 'nullable|string|max:50',
+                'payment_type'       => 'required|string|max:50',
+                'value_of_payment_terms' => 'nullable|numeric|min:0',
+                'payment_type'       => 'required|string|max:50',
+                'value_of_payment_terms' => 'nullable|numeric|min:0',
+                'remarks'            => 'nullable|string',
             ]);
             $oldStatus = $record->status;
             $record->update($validated);
             \App\Models\ActivityLog::log('update', 'Commission Monitoring', "Updated commission request ID: {$id}");
-
-            if (!$user->isAdmin()) {
-                \App\Http\Controllers\PermissionRequestController::consume($user->id, 'edit', (int) $id);
-            }
 
             if (isset($validated['status']) && $validated['status'] === 'Released' && $oldStatus !== 'Released') {
                 \App\Services\AdminEmailNotifier::send(
@@ -165,17 +150,6 @@ class CommissionMonitoringController extends Controller
 
     public function destroy($id)
     {
-        $user = auth()->user();
-
-        if (!$user->isAdmin()) {
-            $hasPermission = \App\Models\PermissionRequest::where('user_id', $user->id)
-                ->where('action', 'delete')
-                ->where('record_id', $id)
-                ->where('status', 'approved')
-                ->exists();
-            if (!$hasPermission) abort(403);
-        }
-
         $record = CommissionRequest::findOrFail($id);
         $clientName = $record->client_name ?? '';
         $projectName = $record->project_name ?? '';
@@ -189,10 +163,6 @@ class CommissionMonitoringController extends Controller
             'status'       => $record->status ?? null,
         ]);
         $record->delete();
-
-        if (!$user->isAdmin()) {
-            \App\Http\Controllers\PermissionRequestController::consume($user->id, 'delete', (int) $id);
-        }
 
         return redirect()->route('commission-monitoring')->with('success', 'Commission request deleted.');
     }

@@ -76,4 +76,80 @@
     setTimeout(initSidebarToggle, 100);
     setTimeout(initSidebarToggle, 500);
     
+    // Mobile drawer behavior — matches the single 1024px breakpoint in dashboard.css
+    function initMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        const menuBtn = document.getElementById('mobileMenuToggle');
+        if (!sidebar || !backdrop || !menuBtn) return;
+
+        function openDrawer() {
+            sidebar.classList.add('mobile-open');
+            backdrop.classList.add('active');
+            document.body.classList.add('drawer-open');
+        }
+        function closeDrawer() {
+            sidebar.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+            document.body.classList.remove('drawer-open');
+        }
+
+        menuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            sidebar.classList.contains('mobile-open') ? closeDrawer() : openDrawer();
+        });
+
+        backdrop.addEventListener('click', closeDrawer);
+
+        // Close drawer after tapping a nav link (mobile/tablet only)
+        sidebar.querySelectorAll('a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth <= 1024) closeDrawer();
+            });
+        });
+
+        // If the window is resized past the drawer breakpoint while open, reset state
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 1024 && sidebar.classList.contains('mobile-open')) {
+                closeDrawer();
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMobileSidebar);
+    } else {
+        initMobileSidebar();
+    }
+
+    // Auto-wrap any table that doesn't already have a scroll container,
+    // so it always gets horizontal/vertical scrollbars instead of being clipped.
+    function autoWrapTables() {
+        const knownWrapperClasses = ['tbl-wrap', 'table-wrapper', 'table-container', 'tbl-scroll', 'auto-scroll-wrap'];
+        document.querySelectorAll('table').forEach(function(table) {
+            let parent = table.parentElement;
+            let alreadyWrapped = false;
+            while (parent) {
+                if (knownWrapperClasses.some(c => parent.classList && parent.classList.contains(c))) {
+                    alreadyWrapped = true;
+                    break;
+                }
+                parent = parent.parentElement;
+            }
+            if (!alreadyWrapped) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'auto-scroll-wrap';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', autoWrapTables);
+    } else {
+        autoWrapTables();
+    }
+
 })();

@@ -6,7 +6,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\AuthController;
 
 // Auth routes (guests only)
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', 'no.cache'])->group(function () {
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login',    [AuthController::class, 'login'])->name('login.post')->middleware('throttle:5,2');
     Route::get('/register/success', function () {
@@ -47,9 +47,11 @@ Route::post('/', function () {
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/logout', function() { return redirect()->route('login'); });
+Route::get('/api/session-check', [AuthController::class, 'sessionCheck'])->name('session.check');
 
 // Protected routes
-Route::middleware('auth')->group(function () {
+// after
+Route::middleware(['auth', 'no.cache'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard')->middleware('page.visible');
 
@@ -95,6 +97,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/notifications', [App\Http\Controllers\SettingsController::class, 'saveNotifications'])->name('settings.notifications');
     Route::post('/settings/smtp', [App\Http\Controllers\SettingsController::class, 'saveSmtp'])->name('settings.smtp');
     Route::post('/settings/profile', [App\Http\Controllers\SettingsController::class, 'updateProfile'])->name('settings.profile');
+    Route::post('/settings/password', [App\Http\Controllers\SettingsController::class, 'updatePassword'])->name('settings.password');
     Route::post('/settings/security-question', [App\Http\Controllers\SettingsController::class, 'updateSecurityQuestion'])->name('settings.security-question');
     Route::post('/settings/employee-info', [App\Http\Controllers\SettingsController::class, 'updateEmployeeInfo'])->name('settings.employee-info');
     Route::post('/settings/users/{id}/employee-info', [App\Http\Controllers\SettingsController::class, 'updateUserEmployeeInfo'])->name('settings.users.employee-info');
@@ -102,6 +105,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/privacy', [App\Http\Controllers\SettingsController::class, 'savePrivacyPolicy'])->name('settings.privacy');
     Route::post('/settings/deleted-records/{logId}/restore', [App\Http\Controllers\SettingsController::class, 'restoreRecord'])->name('settings.deleted.restore');
     Route::delete('/settings/deleted-records/{logId}', [App\Http\Controllers\SettingsController::class, 'permanentDeleteRecord'])->name('settings.deleted.purge');
+    Route::post('/settings/deleted-records/bulk-restore', [App\Http\Controllers\SettingsController::class, 'bulkRestoreRecords'])->name('settings.deleted.bulkRestore');
+    Route::post('/settings/deleted-records/bulk-delete', [App\Http\Controllers\SettingsController::class, 'bulkDeleteRecords'])->name('settings.deleted.bulkDelete');
     Route::post('/expenses/{id}/restore', [App\Http\Controllers\DepartmentalExpensesController::class, 'restore'])->name('expenses.restore');
     Route::delete('/expenses/{id}/purge', [App\Http\Controllers\DepartmentalExpensesController::class, 'purge'])->name('expenses.purge');
     Route::post('/settings/period-lock', [App\Http\Controllers\SettingsController::class, 'lockPeriod'])->name('settings.period-lock.store');
@@ -139,6 +144,7 @@ Route::middleware('auth')->group(function () {
     // Client Database
     Route::get('/client-database', [App\Http\Controllers\SalesMarketingController::class, 'clientDatabase'])->name('client-database');
     Route::get('/api/client-database/{id}/prefill', [App\Http\Controllers\SalesMarketingController::class, 'prefillCommission']);
+    Route::get('/api/client-database/check-duplicate', [App\Http\Controllers\SalesMarketingController::class, 'checkDuplicate']);
     Route::get('/reserved-clients', [App\Http\Controllers\SalesMarketingController::class, 'reservedClients'])->name('reserved-clients');
     Route::post('/reserved-clients/add', [App\Http\Controllers\SalesMarketingController::class, 'storeReservedClient'])->name('reserved-clients.store');
     Route::put('/reserved-clients/{id}', [App\Http\Controllers\SalesMarketingController::class, 'updateReservedClient'])->name('reserved-clients.update');
