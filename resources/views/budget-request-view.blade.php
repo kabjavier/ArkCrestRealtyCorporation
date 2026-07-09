@@ -2,7 +2,7 @@
 
 @section('content')
 @php
-    $data = $expense->form_data ?? [];
+    $data = $formData ?? [];
 
     $deptMap = [
         'ADMIN' => 'ADMINISTRATIVE',

@@ -397,7 +397,14 @@ class DepartmentalExpensesController extends Controller
     public function viewForm($id)
     {
         $expense = DepartmentalExpense::withTrashed()->findOrFail($id);
-        return view('budget-request-view', compact('expense'));
+
+        $raw = \DB::table('app_settings')
+            ->where('key', 'budget_form_snapshot_' . $expense->id)
+            ->value('value');
+
+        $formData = $raw ? json_decode($raw, true) : [];
+
+        return view('budget-request-view', compact('expense', 'formData'));
     }
 
     public function printLiquidation(Request $request)
