@@ -79,7 +79,7 @@
             @foreach($errors->all() as $error)<div>• {{ $error }}</div>@endforeach
         </div>
         @endif
-        <form id="cmAddForm" class="commission-form" action="{{ route('commission-monitoring.store') }}" method="POST" onsubmit="return confirm('Submit this commission request?')">
+        <form id="cmAddForm" class="commission-form" action="{{ route('commission-monitoring.store') }}" method="POST" onsubmit="return previewCommissionSubmit(event)">
             @csrf
             <div class="form-section">
                 <div class="section-title-bar">
@@ -233,33 +233,22 @@
     <div class="monitoring-table-container">
         <!-- Table Header with Title + Filters -->
         <div class="table-top-bar">
-            <h3 class="table-section-title">ALL COMMISSION REQUESTS</h3>
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+                <h3 class="table-section-title" style="margin:0;">ALL COMMISSION REQUESTS</h3>
+                @if($isAdmin)
+                <div style="display:flex;gap:8px;">
+                    <button type="button" id="cmSelectModeBtn" class="clear-dates-btn" onclick="cmToggleSelectMode()">Select</button>
+                    <button type="button" id="cmDeleteSelectedBtn" class="clear-dates-btn" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;display:none;" onclick="cmDeleteSelected()">
+                        Delete Selected (<span id="cmSelectedCount">0</span>)
+                    </button>
+                </div>
+                @endif
+            </div>
 
             <div class="expenses-filters-bar">
                 <div class="expenses-filters-row">
-                    <div class="expenses-date-filters">
-                        <div class="date-range-group">
-                            <label>Date Requested</label>
-                            <div class="date-range-inputs">
-                                <input type="date" id="dateRequestedFrom" class="filter-select">
-                                <span class="date-range-to">to</span>
-                                <input type="date" id="dateRequestedTo" class="filter-select">
-                            </div>
-                        </div>
-
-                        <div class="date-range-group">
-                            <label>Date Released</label>
-                            <div class="date-range-inputs">
-                                <input type="date" id="dateReleasedFrom" class="filter-select">
-                                <span class="date-range-to">to</span>
-                                <input type="date" id="dateReleasedTo" class="filter-select">
-                            </div>
-                        </div>
-
-                        <button type="button" class="clear-dates-btn" onclick="clearDateFilters()">Clear Dates</button>
-                    </div>
-
                     <div class="expenses-search-wrapper">
+            
                         <div class="column-filter-dropdown" id="columnFilterDropdown">
                             <button type="button" id="columnFilterBtn" class="column-filter-btn" onclick="toggleColumnFilterMenu(event)">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -281,11 +270,16 @@
             </div>
         </div>
 
+        <div class="table-scroll-hint">⟵ Swipe left/right to see more columns ⟶</div>
         <div class="table-wrapper">
-            <table class="monitoring-table">
+            <table class="monitoring-table{{ $isAdmin ? '' : ' no-checkbox' }}">
                 <thead>
                     <tr>
-                        <th>Client's Name</th>
+                        @if($isAdmin)
+                        <th class="col-sticky col-sticky-check"><input type="checkbox" id="cmSelectAll" onchange="cmToggleSelectAll(this)"></th>
+                        @endif
+                        <th class="col-sticky col-sticky-index">#</th>
+                        <th class="col-sticky col-sticky-name">Client's Name</th>
                         <th>Reservation Date</th>
                         <th>Project Name</th>
                         <th>Property Details (Block & Lot No.)</th>
@@ -337,7 +331,11 @@
                         data-commission-terms="{{ $request->payment_type }}"
                         data-value-commission-terms="{{ $request->value_of_payment_terms }}"
                         data-agent="{{ $request->agent_name }}">
-                        <td>{{ $request->client_name ?? '-' }}</td>
+                        @if($isAdmin)
+                        <td class="col-sticky col-sticky-check"><input type="checkbox" class="cm-row-check" value="{{ $request->id }}" onchange="cmUpdateSelectedCount()"></td>
+                        @endif
+                        <td class="col-sticky col-sticky-index">{{ $loop->iteration }}</td>
+                        <td class="col-sticky col-sticky-name">{{ $request->client_name ?? '-' }}</td>
                         <td>{{ $request->reservation_date ? $request->reservation_date->format('M d, Y') : '-' }}</td>
                         <td>{{ $request->project_name ?? '-' }}</td>
                         <td>{{ $request->property_details ?? '-' }}</td>
@@ -398,7 +396,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="{{ $isAdmin ? 19 : 18 }}" style="text-align: center; padding: 40px; color: #6b7280;">
+                        <td colspan="{{ $isAdmin ? 21 : 19 }}" style="text-align: center; padding: 40px; color: #6b7280;">
                             No commission requests found.
                         </td>
                     </tr>
@@ -418,8 +416,26 @@
 </div>
 
 <style>
-    .commission-monitoring-container {
-        padding: 0;
+    .col-sticky {
+        position: sticky;
+        background: white;
+        z-index: 2;
+        box-sizing: border-box;
+        /* left is set dynamically by JS (cmUpdateStickyOffsets) */
+    }
+    .monitoring-table thead .col-sticky { background: #1e4575; z-index: 3; }
+    .col-sticky-check {
+        width: 40px; min-width: 40px; max-width: 40px;
+        text-align: center; padding: 12px 4px !important;
+    }
+    .col-sticky-index {
+        width: 50px; min-width: 50px; max-width: 50px;
+        text-align: center; font-weight: 600; color: #6b7280;
+        padding: 12px 4px !important;
+    }
+    .col-sticky-name {
+        min-width: 160px;
+        box-shadow: 4px 0 6px -2px rgba(0,0,0,0.08);
     }
 
     /* Add Form Section */
@@ -811,7 +827,7 @@
     }
     .expenses-filters-row {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: flex-end;
         flex-wrap: wrap;
         gap: 12px;
@@ -1098,6 +1114,47 @@
     .table-wrapper {
         overflow-x: auto;
         overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x pan-y;
+        scrollbar-width: thin !important;
+    }
+    .table-wrapper::-webkit-scrollbar {
+        display: block !important;
+        height: 8px;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb {
+        background: #94a3b8;
+        border-radius: 4px;
+    }
+    @media (max-width: 768px) {
+        .table-scroll-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #1e4575;
+            background: #eef2f7;
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+    }
+    .table-scroll-hint { display: none; }
+    @media (max-width: 768px) {
+        .col-sticky-check {
+            width: 32px; min-width: 32px; max-width: 32px;
+            padding: 12px 2px !important;
+        }
+        .col-sticky-index {
+            width: 28px; min-width: 28px; max-width: 28px;
+            font-size: 11px; padding: 12px 2px !important;
+        }
+        .col-sticky-name {
+            min-width: 90px; max-width: 90px;
+            font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
     }
 
     .monitoring-table {
@@ -1440,10 +1497,11 @@
 // Date Requested / Date Released are handled separately as range pickers above.
 const FILTERABLE_FIELDS = [
     { key: 'client_name',       label: "Client's Name",             dataAttr: 'data-client',                type: 'text'  },
-    { key: 'reservation_date',  label: 'Reservation Date',          dataAttr: 'data-reservation-date',      type: 'date'  },
     { key: 'project_name',      label: 'Project Name',              dataAttr: 'data-project',                type: 'text'  },
     { key: 'property_details',  label: 'Property Details',          dataAttr: 'data-property',               type: 'text'  },
     { key: 'agent_name',        label: "Agent's Name",              dataAttr: 'data-agent',                  type: 'text'  },
+    { key: 'reservation_date',  label: 'Reservation Date',          dataAttr: 'data-reservation-date',      type: 'daterange' },
+    { key: 'date_requested',    label: 'Date Requested',            dataAttr: 'data-date-requested',        type: 'daterange' },
     @if($isAdmin)
     { key: 'price_sqm',         label: 'Price/SQM',                 dataAttr: 'data-price-sqm',              type: 'text'  },
     { key: 'lot_area',          label: 'Lot Area',                  dataAttr: 'data-lot-area',                type: 'text'  },
@@ -1454,6 +1512,7 @@ const FILTERABLE_FIELDS = [
     { key: 'mode_of_payment',   label: 'Mode of Payment',           dataAttr: 'data-mode',                    type: 'text'  },
     { key: 'remarks',           label: 'Remarks',                   dataAttr: 'data-remarks',                 type: 'text'  },
     { key: 'units',             label: 'Units',                     dataAttr: 'data-units',                   type: 'text'  },
+    { key: 'date_released',     label: 'Date Released',             dataAttr: 'data-date-released',         type: 'daterange' },
     @if($isAdmin)
     { key: 'commission_percent',label: 'Commission %',              dataAttr: 'data-commission-percent',      type: 'text'  },
     { key: 'commission',        label: 'Commission',                dataAttr: 'data-commission',              type: 'text'  },
@@ -1507,12 +1566,13 @@ function toggleColumnFilter(key) {
     if (columnFilters.hasOwnProperty(key)) {
         removeColumnFilter(key);
     } else {
-        columnFilters[key] = '';
+        const f = fieldConfig(key);
+        columnFilters[key] = (f && f.type === 'daterange') ? { from: '', to: '' } : '';
         renderColumnFilterMenu();
         renderActiveColumnFilters();
         closeColumnFilterMenu();
         setTimeout(() => {
-            const el = document.getElementById('colFilterInput_' + key);
+            const el = document.getElementById('colFilterInput_' + key) || document.getElementById('colFilterInput_' + key + '_from');
             if (el) el.focus();
         }, 0);
     }
@@ -1537,6 +1597,14 @@ function updateColumnFilterValue(key, value) {
     applyFilters();
 }
 
+function updateDateRangeFilterValue(key, part, value) {
+    if (!columnFilters[key] || typeof columnFilters[key] !== 'object') {
+        columnFilters[key] = { from: '', to: '' };
+    }
+    columnFilters[key][part] = value;
+    applyFilters();
+}
+
 function renderActiveColumnFilters() {
     const row = document.getElementById('activeColumnFiltersRow');
     const badge = document.getElementById('filterCountBadge');
@@ -1554,19 +1622,26 @@ function renderActiveColumnFilters() {
         return;
     }
 
-    row.style.display = 'flex';
+   row.style.display = 'flex';
     row.innerHTML = keys.map(key => {
         const f = fieldConfig(key);
-        const val = columnFilters[key] || '';
         let inputHtml = '';
         if (f.type === 'select') {
+            const val = columnFilters[key] || '';
             inputHtml = `<select id="colFilterInput_${key}" onchange="updateColumnFilterValue('${key}', this.value)">
                             <option value="">All</option>
                             ${f.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
                          </select>`;
+        } else if (f.type === 'daterange') {
+            const range = (columnFilters[key] && typeof columnFilters[key] === 'object') ? columnFilters[key] : { from: '', to: '' };
+            inputHtml = `<input type="date" id="colFilterInput_${key}_from" value="${range.from || ''}" onchange="updateDateRangeFilterValue('${key}', 'from', this.value)">
+                         <span style="color:#8a9bad;font-size:12px;">to</span>
+                         <input type="date" id="colFilterInput_${key}_to" value="${range.to || ''}" onchange="updateDateRangeFilterValue('${key}', 'to', this.value)">`;
         } else if (f.type === 'date') {
+            const val = columnFilters[key] || '';
             inputHtml = `<input type="date" id="colFilterInput_${key}" value="${val}" oninput="updateColumnFilterValue('${key}', this.value)">`;
         } else {
+            const val = columnFilters[key] || '';
             inputHtml = `<input type="text" id="colFilterInput_${key}" placeholder="Search ${f.label.toLowerCase()}..." value="${val}" oninput="updateColumnFilterValue('${key}', this.value)">`;
         }
         return `<div class="column-filter-chip">
@@ -1579,9 +1654,21 @@ function renderActiveColumnFilters() {
 
 function matchesColumnFilters(row) {
     for (const key in columnFilters) {
+        const f = fieldConfig(key);
+        if (!f) continue;
+
+        if (f.type === 'daterange') {
+            const range = columnFilters[key];
+            if (!range || (!range.from && !range.to)) continue;
+            const rowVal = (row.getAttribute(f.dataAttr) || '').toString();
+            if (!rowVal) return false;
+            if (range.from && rowVal < range.from) return false;
+            if (range.to && rowVal > range.to) return false;
+            continue;
+        }
+
         const filterVal = (columnFilters[key] || '').toString().trim().toLowerCase();
         if (!filterVal) continue;
-        const f = fieldConfig(key);
         const rowVal = (row.getAttribute(f.dataAttr) || '').toString().toLowerCase();
 
         if (f.type === 'date') {
@@ -1593,37 +1680,6 @@ function matchesColumnFilters(row) {
         }
     }
     return true;
-}
-
-// Date Requested / Date Released range filter check
-function matchesDateRangeFilters(row) {
-    const reqFrom = document.getElementById('dateRequestedFrom')?.value || '';
-    const reqTo   = document.getElementById('dateRequestedTo')?.value || '';
-    const relFrom = document.getElementById('dateReleasedFrom')?.value || '';
-    const relTo   = document.getElementById('dateReleasedTo')?.value || '';
-
-    const rowReq = row.getAttribute('data-date-requested') || '';
-    const rowRel = row.getAttribute('data-date-released') || '';
-
-    if (reqFrom || reqTo) {
-        if (!rowReq) return false;
-        if (reqFrom && rowReq < reqFrom) return false;
-        if (reqTo && rowReq > reqTo) return false;
-    }
-    if (relFrom || relTo) {
-        if (!rowRel) return false;
-        if (relFrom && rowRel < relFrom) return false;
-        if (relTo && rowRel > relTo) return false;
-    }
-    return true;
-}
-
-function clearDateFilters() {
-    ['dateRequestedFrom','dateRequestedTo','dateReleasedFrom','dateReleasedTo'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    applyFilters();
 }
 
 function applyFilters() {
@@ -1640,10 +1696,9 @@ function applyFilters() {
     for (let row of dataRows) {
         const text = row.textContent.toLowerCase();
         const matchesSearch = searchWords.length === 0 || searchWords.every(w => text.includes(w));
-        const dateRangeMatch = matchesDateRangeFilters(row);
         const columnMatch = matchesColumnFilters(row);
 
-        if (matchesSearch && dateRangeMatch && columnMatch) {
+        if (matchesSearch && columnMatch) {
             row.style.display = '';
             visible++;
         } else {
@@ -1660,10 +1715,6 @@ function applyFilters() {
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('monitoringSearch');
     if (searchInput) searchInput.addEventListener('input', applyFilters);
-
-    ['dateRequestedFrom','dateRequestedTo','dateReleasedFrom','dateReleasedTo'].forEach(id => {
-        document.getElementById(id)?.addEventListener('change', applyFilters);
-    });
 });
 
 function filterByStat(status) {
@@ -1723,12 +1774,79 @@ function resetFilters() {
     document.getElementById('statNotReleased').textContent = notReleased;
     document.getElementById('statReleased').textContent = released;
 }
+function cmUpdateStickyOffsets() {
+    const table = document.querySelector('.monitoring-table');
+    if (!table) return;
+
+    // Use the header row as the source of truth for column widths —
+    // every column in a table shares the same width as its header cell.
+    const headerCells = Array.from(table.querySelectorAll('thead th.col-sticky'))
+        .filter(el => el.offsetParent !== null); // skip hidden (display:none) cells
+
+    let offset = 0;
+    const offsets = [];
+    headerCells.forEach(cell => {
+        offsets.push(offset);
+        offset += cell.getBoundingClientRect().width;
+    });
+
+    // Apply the same offsets to header AND every body row, matched by
+    // column order (only counting visible sticky cells per row).
+    table.querySelectorAll('tr').forEach(row => {
+        const cells = Array.from(row.querySelectorAll('.col-sticky'))
+            .filter(el => el.offsetParent !== null);
+        cells.forEach((cell, i) => {
+            if (offsets[i] !== undefined) cell.style.left = offsets[i] + 'px';
+        });
+    });
+}
 function clearCmAddForm() {
     window.showConfirmModal('Clear all entered fields? This cannot be undone.').then(function(confirmed) {
         if (confirmed) {
             document.getElementById('cmAddForm').reset();
         }
     });
+}
+
+function previewCommissionSubmit(event) {
+    event.preventDefault();
+
+    const val = (name) => {
+        const el = document.querySelector('#cmAddForm [name="' + name + '"]');
+        return el ? el.value : '';
+    };
+    const fmtMoney = (v) => v ? '₱' + parseFloat(v).toLocaleString('en-PH', {minimumFractionDigits:2}) : '-';
+    const fmtDate  = (v) => v ? new Date(v + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'2-digit', year:'numeric'}) : '-';
+    const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    set('cmp_client_name',       val('client_name') || '-');
+    set('cmp_reservation_date',  fmtDate(val('reservation_date')));
+    set('cmp_project_name',      val('project_name') || '-');
+    set('cmp_property_details',  val('property_details') || '-');
+    set('cmp_price_sqm',         fmtMoney(val('price_sqm')));
+    set('cmp_lot_area',          val('lot_area') ? val('lot_area') + ' sqm' : '-');
+    set('cmp_discount',          val('discount') ? val('discount') + (val('discount_type') === 'percent' ? '%' : '') : '-');
+    set('cmp_net_tcp',           fmtMoney(val('net_tcp')));
+    set('cmp_commission_percent', val('commission_percent') ? val('commission_percent') + '%' : '-');
+    set('cmp_commission',        fmtMoney(val('commission')));
+    set('cmp_payment_type',      val('payment_type') || '-');
+    set('cmp_value_of_payment_terms', fmtMoney(val('value_of_payment_terms')));
+    set('cmp_terms_of_payment',  val('terms_of_payment') || '-');
+    set('cmp_mode_of_payment',   val('mode_of_payment') || '-');
+    set('cmp_agent_name',        val('agent_name') || '-');
+    set('cmp_date_requested',    fmtDate(val('date_requested')));
+    set('cmp_number_of_units',   val('number_of_units') || '-');
+    set('cmp_status',            val('status') || '-');
+    set('cmp_date_released',     fmtDate(val('date_released')));
+    set('cmp_remarks',           val('remarks') || '-');
+
+    document.getElementById('cmPreviewModal').classList.add('active');
+    return false;
+}
+
+function confirmSubmitCmForm() {
+    document.getElementById('cmPreviewModal').classList.remove('active');
+    document.getElementById('cmAddForm').submit();
 }
 function viewCommission(id) {
     fetch(`/api/commission-monitoring/${id}`)
@@ -2102,6 +2220,83 @@ function staffDeleteCommission(e, id) {
     }
     return false;
 }
+function cmIsMobile() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function cmSetCheckboxColumnVisible(visible) {
+    document.querySelectorAll('.col-sticky-check').forEach(el => {
+        el.style.display = visible ? '' : 'none';
+    });
+}
+
+function cmToggleSelectMode() {
+    const table = document.querySelector('.monitoring-table');
+    const btn = document.getElementById('cmSelectModeBtn');
+    const isOn = table.classList.toggle('cm-select-mode');
+    btn.textContent = isOn ? 'Cancel' : 'Select';
+    btn.style.background = isOn ? '#1e4575' : '';
+    btn.style.color = isOn ? '#fff' : '';
+
+    cmSetCheckboxColumnVisible(isOn);
+    cmUpdateStickyOffsets();
+
+    if (!isOn) {
+        document.querySelectorAll('.cm-row-check').forEach(cb => cb.checked = false);
+        cmUpdateSelectedCount();
+    }
+}
+
+// On mobile, start with the checkbox column hidden until "Select" is tapped.
+// On desktop, always keep it visible.
+document.addEventListener('DOMContentLoaded', function() {
+    if (cmIsMobile()) {
+        cmSetCheckboxColumnVisible(false);
+    }
+    cmUpdateStickyOffsets();
+});
+window.addEventListener('resize', cmUpdateStickyOffsets);
+
+function cmToggleSelectAll(checkbox) {
+    document.querySelectorAll('.cm-row-check').forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    cmUpdateSelectedCount();
+}
+
+function cmUpdateSelectedCount() {
+    const checked = document.querySelectorAll('.cm-row-check:checked');
+    const btn = document.getElementById('cmDeleteSelectedBtn');
+    const countEl = document.getElementById('cmSelectedCount');
+    if (countEl) countEl.textContent = checked.length;
+    if (btn) btn.style.display = checked.length > 0 ? 'inline-flex' : 'none';
+
+    const selectAll = document.getElementById('cmSelectAll');
+    const allBoxes = document.querySelectorAll('.cm-row-check');
+    if (selectAll) selectAll.checked = allBoxes.length > 0 && checked.length === allBoxes.length;
+}
+
+function cmDeleteSelected() {
+    const ids = Array.from(document.querySelectorAll('.cm-row-check:checked')).map(cb => cb.value);
+    if (ids.length === 0) return;
+
+    window.showConfirmModal('Delete ' + ids.length + ' selected commission request(s)? This cannot be undone.').then(function(confirmed) {
+        if (!confirmed) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("commission-monitoring.bulk-delete") }}';
+        form.innerHTML = `@csrf`;
+        ids.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
 
 function closeCmPermModal() {
     document.getElementById('permissionModal').classList.remove('active');
@@ -2225,8 +2420,8 @@ function submitCmPermRequest() {
                         <input type="number" id="cm_edit_price_sqm" name="price_sqm" step="0.01" min="0" placeholder="0.00">
                     </div>
                     <div class="modal-field">
-                        <label>LOT AREA <span class="required">*</span></label>
-                        <input type="number" id="cm_add_lot_area" name="lot_area" placeholder="0.0000" step="0.0001" min="0" oninput="computeAddTCP()" required>
+                        <label>Lot Area</label>
+                        <input type="number" id="cm_edit_lot_area" name="lot_area" step="0.0001" min="0" placeholder="0.0000" oninput="computeEditNetTCP()">
                     </div>
                     <div class="modal-field">
                         <label style="display:flex;align-items:center;gap:8px;">
@@ -2316,6 +2511,51 @@ function submitCmPermRequest() {
                 <button type="submit" class="btn-modal-save">Save Changes</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- SUBMIT PREVIEW Modal -->
+<div id="cmPreviewModal" class="modal-overlay">
+    <div class="modal-box" style="max-width:800px;">
+        <div class="modal-header">
+            <h3>Review Commission Request</h3>
+            <button class="modal-close" onclick="closeCmModal('cmPreviewModal')">✖</button>
+        </div>
+        <div class="modal-body">
+            <div style="background:#fef3c7;color:#92400e;padding:12px 16px;border-radius:8px;margin-bottom:18px;font-size:13px;font-weight:600;">
+                ⚠ Please review the details below carefully. Are you sure you want to submit this request?
+            </div>
+            <div class="modal-grid">
+                <div class="modal-field"><label>Client's Name</label><div class="field-value" id="cmp_client_name">-</div></div>
+                <div class="modal-field"><label>Reservation Date</label><div class="field-value" id="cmp_reservation_date">-</div></div>
+                <div class="modal-field"><label>Project Name</label><div class="field-value" id="cmp_project_name">-</div></div>
+                <div class="modal-field"><label>Property Details</label><div class="field-value" id="cmp_property_details">-</div></div>
+                @if($isAdmin)
+                <div class="modal-field"><label>Price / SQM</label><div class="field-value" id="cmp_price_sqm">-</div></div>
+                <div class="modal-field"><label>Lot Area</label><div class="field-value" id="cmp_lot_area">-</div></div>
+                <div class="modal-field"><label>Discount</label><div class="field-value" id="cmp_discount">-</div></div>
+                @endif
+                <div class="modal-field"><label>Net TCP</label><div class="field-value" id="cmp_net_tcp">-</div></div>
+                @if($isAdmin)
+                <div class="modal-field"><label>Commission %</label><div class="field-value" id="cmp_commission_percent">-</div></div>
+                @endif
+                <div class="modal-field"><label>Value of Commission</label><div class="field-value" id="cmp_commission">-</div></div>
+                <div class="modal-field"><label>Commission Terms</label><div class="field-value" id="cmp_payment_type">-</div></div>
+                <div class="modal-field"><label>Value of Commission Terms</label><div class="field-value" id="cmp_value_of_payment_terms">-</div></div>
+                <div class="modal-field"><label>Terms of Payment</label><div class="field-value" id="cmp_terms_of_payment">-</div></div>
+                <div class="modal-field"><label>Mode of Payment</label><div class="field-value" id="cmp_mode_of_payment">-</div></div>
+                <div class="modal-field"><label>Agent's Name</label><div class="field-value" id="cmp_agent_name">-</div></div>
+                <div class="modal-field"><label>Date Requested</label><div class="field-value" id="cmp_date_requested">-</div></div>
+                <div class="modal-field"><label>Number of Units</label><div class="field-value" id="cmp_number_of_units">-</div></div>
+                <div class="modal-field"><label>Status</label><div class="field-value" id="cmp_status">-</div></div>
+                <div class="modal-field"><label>Date Released</label><div class="field-value" id="cmp_date_released">-</div></div>
+                <div class="modal-field" style="grid-column:1/-1;"><label>Remarks</label><div class="field-value" id="cmp_remarks">-</div></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeCmModal('cmPreviewModal')">Go Back &amp; Edit</button>
+            <button class="btn-modal-save" onclick="confirmSubmitCmForm()">Yes, Submit Request</button>
+        </div>
     </div>
 </div>
 
