@@ -238,8 +238,10 @@
                     <div class="form-group">
                         <label>Status <span class="required">*</span></label>
                         <select id="status" name="status" class="form-control" required>
-                            <option value="NOT YET LIQUIDATED">NOT YET LIQUIDATED</option>
+                            <option value="FOR REQUEST">FOR REQUEST</option>
+                            <option value="NOT LIQUIDATED">NOT LIQUIDATED</option>
                             <option value="LIQUIDATED">LIQUIDATED</option>
+                            <option value="REJECTED">REJECTED</option>
                         </select>
                     </div>
 
@@ -283,29 +285,7 @@
             
             <!-- Filters and Search below title -->
             <div class="expenses-filters-bar" style="display: flex; flex-direction: column; gap: 14px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
-                <div class="expenses-filters-row" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div class="expenses-date-filters" style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
-                        <div class="date-range-group" style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-weight: 600; color: #1e4575; font-size: 12px; text-transform: uppercase; letter-spacing: .3px;">Date Requested</label>
-                            <div class="date-range-inputs" style="display: flex; align-items: center; gap: 6px;">
-                                <input type="date" id="dateRequestedFrom" class="filter-select" style="font-size: 13px; padding: 7px 10px; border: 1.5px solid #d0d5dd; border-radius: 6px; background-color: white; color: #344054;">
-                                <span style="color:#8a9bad;font-size:12px;">to</span>
-                                <input type="date" id="dateRequestedTo" class="filter-select" style="font-size: 13px; padding: 7px 10px; border: 1.5px solid #d0d5dd; border-radius: 6px; background-color: white; color: #344054;">
-                            </div>
-                        </div>
-
-                        <div class="date-range-group" style="display: flex; flex-direction: column; gap: 4px;">
-                            <label style="font-weight: 600; color: #1e4575; font-size: 12px; text-transform: uppercase; letter-spacing: .3px;">Date Released</label>
-                            <div class="date-range-inputs" style="display: flex; align-items: center; gap: 6px;">
-                                <input type="date" id="dateReleasedFrom" class="filter-select" style="font-size: 13px; padding: 7px 10px; border: 1.5px solid #d0d5dd; border-radius: 6px; background-color: white; color: #344054;">
-                                <span style="color:#8a9bad;font-size:12px;">to</span>
-                                <input type="date" id="dateReleasedTo" class="filter-select" style="font-size: 13px; padding: 7px 10px; border: 1.5px solid #d0d5dd; border-radius: 6px; background-color: white; color: #344054;">
-                            </div>
-                        </div>
-
-                        <button type="button" class="clear-dates-btn" onclick="clearDateFilters()" style="font-size:12px;font-weight:600;color:#1e4575;background:#eef2f7;border:1px solid #d0d5dd;border-radius:6px;padding:8px 14px;cursor:pointer;white-space:nowrap;height:34px;">Clear Dates</button>
-                    </div>
-
+                <div class="expenses-filters-row" style="display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div class="expenses-search-wrapper" style="display: flex; align-items: center; gap: 10px; width: 100%; max-width: 560px;">
                         <div class="column-filter-dropdown" id="columnFilterDropdown" style="position: relative;">
                             <button type="button" id="columnFilterBtn" class="column-filter-btn" onclick="toggleColumnFilterMenu(event)">
@@ -362,6 +342,7 @@
                         <td>
                             <div class="action-buttons">
                                 <button onclick="viewRequest({{ $req->id }})" class="btn-action btn-view">View</button>
+                                <a href="{{ route('departmental-expenses.view-form', $req->id) }}" target="_blank" class="btn-action btn-view" style="text-decoration:none;display:inline-flex;align-items:center;" title="View & print the original Budget Request Form">Form</a>
                                 <button onclick="editRequest({{ $req->id }})" class="btn-action btn-edit">Edit</button>
                                 <button onclick="deleteRequest({{ $req->id }})" class="btn-action btn-delete">Delete</button>
                             </div>
@@ -710,8 +691,10 @@
                 <div class="form-group">
                     <label>Status <span class="required">*</span></label>
                     <select id="edit_status" name="status" class="form-control form-control-sm" required>
-                        <option value="NOT YET LIQUIDATED">NOT YET LIQUIDATED</option>
+                        <option value="FOR REQUEST">FOR REQUEST</option>
+                        <option value="NOT LIQUIDATED">NOT LIQUIDATED</option>
                         <option value="LIQUIDATED">LIQUIDATED</option>
+                        <option value="REJECTED">REJECTED</option>
                     </select>
                 </div>
 
@@ -738,6 +721,82 @@
 
             <div class="form-actions-right" style="margin-top: 20px;">
                 <button type="submit" class="btn-submit">Update Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Liquidation Update Modal (appears when status is changed to LIQUIDATED) -->
+<div id="liquidationUpdateModal" class="modal">
+    <div class="modal-content modal-compact">
+        <div class="modal-header">
+            <h3>UPDATE RECORD</h3>
+            <span class="close" onclick="cancelLiquidationModal()">&times;</span>
+        </div>
+        <form id="liquidationUpdateForm" class="request-form modal-form">
+            <input type="hidden" id="liq_source">
+            <input type="hidden" id="liq_id">
+            <input type="hidden" id="liq_control_number">
+
+            <!-- Request Information Section (auto-filled from the budget request form, read-only) -->
+            <div class="form-section">
+                <h4 class="section-label">Request Information</h4>
+                <div class="form-row-inline">
+                    <div class="form-group">
+                        <label>Requestor Name</label>
+                        <input type="text" id="liq_requestor_name" class="form-control" readonly style="background-color: #f4f6f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Department</label>
+                        <input type="text" id="liq_department" class="form-control" readonly style="background-color: #f4f6f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <input type="text" id="liq_category" class="form-control" readonly style="background-color: #f4f6f8;">
+                    </div>
+                </div>
+                <div class="form-row-inline">
+                    <div class="form-group">
+                        <label>Date Requested</label>
+                        <input type="date" id="liq_date_requested" class="form-control" readonly style="background-color: #f4f6f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Requested Amount</label>
+                        <input type="text" id="liq_requested_amount" class="form-control" readonly style="background-color: #f4f6f8;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Release & Liquidation Section (left blank for the user to fill in now) -->
+            <div class="form-section">
+                <h4 class="section-label">Release & Liquidation Details</h4>
+                <div class="form-row-inline">
+                    <div class="form-group">
+                        <label>Status</label>
+                        <input type="text" id="liq_status_display" class="form-control" value="LIQUIDATED" readonly style="background-color: #f4f6f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Date Released</label>
+                        <input type="date" id="liq_date_released" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Total Expenses</label>
+                        <input type="text" id="liq_total_expenses" class="form-control" placeholder="0.00" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Returned</label>
+                        <input type="text" id="liq_amount_returned" class="form-control" placeholder="0.00" inputmode="decimal" readonly style="background-color: #f4f6f8;">
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Amount Returned</label>
+                        <input type="date" id="liq_date_of_amount_returned" class="form-control">
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions-right" style="margin-top: 20px; gap: 10px; display: flex; justify-content: flex-end;">
+                <button type="button" onclick="cancelLiquidationModal()" style="padding: 10px 20px; background: #f4f6f8; color: #565651; border: 1px solid #dfe3e8; border-radius: 6px; font-weight: 600; cursor: pointer;">Cancel</button>
+                <button type="submit" class="btn-submit">Update</button>
             </div>
         </form>
     </div>
@@ -1203,7 +1262,198 @@ function addCommaFormatting(inputId) {
     });
 }
 ['requested_amount','total_expenses','amount_returned',
- 'edit_requested_amount','edit_total_expenses','edit_amount_returned'].forEach(addCommaFormatting);
+ 'edit_requested_amount','edit_total_expenses','edit_amount_returned',
+ 'liq_requested_amount','liq_total_expenses','liq_amount_returned'].forEach(addCommaFormatting);
+
+// ---- Liquidation "UPDATE RECORD" popup ----
+// Triggered whenever the Status field (on the Add New Expenses form, or the
+// Edit Request modal) is switched to LIQUIDATED. Shows a popup mirroring the
+// Add New Expenses "Request Information" fields (auto-filled and locked,
+// since they come from the original budget request form) plus the
+// Release & Liquidation fields, which are left blank for the user to fill
+// in now.
+// ---- Lock the Release & Liquidation fields (Date Released, Total Expenses,
+// Amount Returned, Date of Amount Returned) unless Status is LIQUIDATED.
+// These are only ever meant to be filled in through the "UPDATE RECORD"
+// popup, so outside of an already-liquidated record they stay blank and
+// non-editable here. ----
+function syncLiquidationFieldsState(prefix) {
+    const statusEl = document.getElementById(prefix + 'status');
+    const isLiquidated = !!statusEl && statusEl.value === 'LIQUIDATED';
+    ['date_released', 'total_expenses', 'amount_returned', 'date_of_amount_returned'].forEach(function(field) {
+        const el = document.getElementById(prefix + field);
+        if (!el) return;
+        if (isLiquidated) {
+            el.disabled = false;
+        } else {
+            el.value = '';
+            el.disabled = true;
+        }
+    });
+}
+
+let addStatusPrevValue = document.getElementById('status') ? document.getElementById('status').value : 'FOR REQUEST';
+let editStatusPrevValue = 'FOR REQUEST';
+
+function openLiquidationModal(data) {
+    document.getElementById('liq_source').value = data.source;
+    document.getElementById('liq_id').value = data.id || '';
+    document.getElementById('liq_control_number').value = data.control_number || '';
+    document.getElementById('liq_requestor_name').value = data.requestor_name || '';
+    document.getElementById('liq_department').value = data.department || '';
+    document.getElementById('liq_category').value = data.category || '';
+    document.getElementById('liq_date_requested').value = data.date_requested || '';
+    document.getElementById('liq_requested_amount').value = data.requested_amount || '';
+
+    // These are intentionally left blank so the user fills them in now.
+    document.getElementById('liq_date_released').value = '';
+    document.getElementById('liq_total_expenses').value = '';
+    document.getElementById('liq_amount_returned').value = '';
+    document.getElementById('liq_date_of_amount_returned').value = '';
+
+    if (data.source === 'edit') {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    document.getElementById('liquidationUpdateModal').style.display = 'block';
+}
+
+function cancelLiquidationModal() {
+    const source = document.getElementById('liq_source').value;
+    document.getElementById('liquidationUpdateModal').style.display = 'none';
+
+    if (source === 'edit') {
+        document.getElementById('edit_status').value = editStatusPrevValue;
+        syncLiquidationFieldsState('edit_');
+        document.getElementById('editModal').style.display = 'block';
+    } else if (source === 'add') {
+        const statusEl = document.getElementById('status');
+        if (statusEl) statusEl.value = addStatusPrevValue;
+        syncLiquidationFieldsState('');
+    }
+}
+
+const addStatusSelect = document.getElementById('status');
+if (addStatusSelect) {
+    syncLiquidationFieldsState('');
+    addStatusSelect.addEventListener('change', function() {
+        if (this.value === 'LIQUIDATED') {
+            openLiquidationModal({
+                source: 'add',
+                id: null,
+                control_number: '',
+                requestor_name: document.getElementById('requestor_name').value.trim(),
+                department: document.getElementById('department').value.trim(),
+                category: document.getElementById('category').value.trim(),
+                date_requested: document.getElementById('date_requested').value,
+                requested_amount: document.getElementById('requested_amount').value
+            });
+        } else {
+            addStatusPrevValue = this.value;
+        }
+        syncLiquidationFieldsState('');
+    });
+}
+
+document.getElementById('edit_status').addEventListener('change', function() {
+    if (this.value === 'LIQUIDATED') {
+        openLiquidationModal({
+            source: 'edit',
+            id: document.getElementById('edit_id').value,
+            control_number: document.getElementById('edit_control_number').value,
+            requestor_name: document.getElementById('edit_requestor_name').value,
+            department: document.getElementById('edit_department').value,
+            category: document.getElementById('edit_category').value,
+            date_requested: document.getElementById('edit_date_requested').value,
+            requested_amount: document.getElementById('edit_requested_amount').value
+        });
+    } else {
+        editStatusPrevValue = this.value;
+    }
+    syncLiquidationFieldsState('edit_');
+});
+
+document.getElementById('liquidationUpdateForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    if (!validateAmountField('liq_total_expenses', 'Total Expenses', false)) return;
+
+    showConfirm('Are you sure you want to update this record?', function() {
+        _submitLiquidationUpdate();
+    });
+});
+
+function _submitLiquidationUpdate() {
+    const source = document.getElementById('liq_source').value;
+    const id = document.getElementById('liq_id').value;
+
+    const payload = {
+        requestor_name: document.getElementById('liq_requestor_name').value.trim(),
+        department: reverseDepartmentName(document.getElementById('liq_department').value.trim()),
+        category: document.getElementById('liq_category').value.trim(),
+        date_requested: document.getElementById('liq_date_requested').value || null,
+        requested_amount: parseFloat(document.getElementById('liq_requested_amount').value.replace(/,/g,'')) || 0,
+        status: 'LIQUIDATED',
+        date_released: document.getElementById('liq_date_released').value || null,
+        total_expenses: document.getElementById('liq_total_expenses').value ? parseFloat(document.getElementById('liq_total_expenses').value.replace(/,/g,'')) : null,
+        amount_returned: document.getElementById('liq_amount_returned').value ? parseFloat(document.getElementById('liq_amount_returned').value.replace(/,/g,'')) : null,
+        date_of_amount_returned: document.getElementById('liq_date_of_amount_returned').value || null
+    };
+
+    if (source === 'edit' && id) {
+        payload.control_number = document.getElementById('liq_control_number').value.trim();
+
+        fetch(`/api/departmental-expenses/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Error updating request'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Success', 'Record updated and marked as liquidated!');
+                setTimeout(() => location.reload(), 800);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Error', error.message || 'Error updating request');
+        });
+    } else {
+        fetch('/api/departmental-expenses', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Error adding request'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Success', 'Request added and marked as liquidated!');
+                setTimeout(() => location.reload(), 800);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Error', error.message || 'Error adding request');
+        });
+    }
+}
 
 // Highlight row from permission notification URL params
 (function() {
@@ -1413,6 +1663,8 @@ function _doEditRequest(id) {
     
     document.getElementById('edit_requested_amount').value = cells[5].textContent.replace('₱ ', '').replace(/,/g, '');
     document.getElementById('edit_status').value = cells[6].querySelector('.status-badge').textContent.trim();
+    editStatusPrevValue = document.getElementById('edit_status').value;
+    syncLiquidationFieldsState('edit_');
     
     if (cells[7].textContent !== '-') {
         const dateReleased = cells[7].textContent.trim();
@@ -1661,42 +1913,12 @@ window.onclick = function(event) {
     if (event.target == modal) {
         closeEditModal();
     }
-}
-
-// Date Requested / Date Released range filter check
-function matchesDateRangeFilters(row) {
-    const reqFrom = document.getElementById('dateRequestedFrom')?.value || '';
-    const reqTo   = document.getElementById('dateRequestedTo')?.value || '';
-    const relFrom = document.getElementById('dateReleasedFrom')?.value || '';
-    const relTo   = document.getElementById('dateReleasedTo')?.value || '';
-
-    const rowReq = row.getAttribute('data-date-requested') || '';
-    const rowRel = row.getAttribute('data-date-released') || '';
-
-    if (reqFrom || reqTo) {
-        if (!rowReq) return false;
-        if (reqFrom && rowReq < reqFrom) return false;
-        if (reqTo && rowReq > reqTo) return false;
+    const liqModal = document.getElementById('liquidationUpdateModal');
+    if (event.target == liqModal) {
+        cancelLiquidationModal();
     }
-    if (relFrom || relTo) {
-        if (!rowRel) return false;
-        if (relFrom && rowRel < relFrom) return false;
-        if (relTo && rowRel > relTo) return false;
-    }
-    return true;
 }
 
-function clearDateFilters() {
-    ['dateRequestedFrom','dateRequestedTo','dateReleasedFrom','dateReleasedTo'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-    });
-    applyFilters();
-}
-
-['dateRequestedFrom','dateRequestedTo','dateReleasedFrom','dateReleasedTo'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', applyFilters);
-});
 
 // Table Search + Date Range filtering (combined) - Multiple words support
 const searchInput = document.getElementById('tableSearch');
@@ -1709,11 +1931,13 @@ const FILTERABLE_FIELDS = [
     { key: 'requestor_name',           label: 'Requestor Name',           dataAttr: 'data-requestor',        type: 'text'  },
     { key: 'department',               label: 'Department',               dataAttr: 'data-department',       type: 'text'  },
     { key: 'category',                 label: 'Category',                 dataAttr: 'data-category',         type: 'text'  },
+    { key: 'date_requested',           label: 'Date Requested',           dataAttr: 'data-date-requested',   type: 'daterange' },
+    { key: 'date_released',            label: 'Date Released',            dataAttr: 'data-date-released',    type: 'daterange' },
+    { key: 'date_of_amount_returned',  label: 'Date of Amount Returned',  dataAttr: 'data-date-returned',    type: 'daterange' },
     { key: 'requested_amount',         label: 'Requested Amount',         dataAttr: 'data-requested-amount', type: 'text'  },
-    { key: 'status',                   label: 'Status',                   dataAttr: 'data-status',           type: 'select', options: ['NOT YET LIQUIDATED', 'LIQUIDATED'] },
+    { key: 'status',                   label: 'Status',                   dataAttr: 'data-status',           type: 'select', options: ['FOR REQUEST', 'NOT LIQUIDATED', 'LIQUIDATED', 'REJECTED'] },
     { key: 'total_expenses',           label: 'Total Expenses',           dataAttr: 'data-total-expenses',   type: 'text'  },
     { key: 'amount_returned',          label: 'Amount Returned',          dataAttr: 'data-amount-returned',  type: 'text'  },
-    { key: 'date_of_amount_returned',  label: 'Date of Amount Returned',  dataAttr: 'data-date-returned',    type: 'date'  },
 ];
 
 // Active per-column filters: { fieldKey: currentValue }
@@ -1760,17 +1984,17 @@ function toggleColumnFilter(key) {
     if (columnFilters.hasOwnProperty(key)) {
         removeColumnFilter(key);
     } else {
-        columnFilters[key] = '';
+        const f = fieldConfig(key);
+        columnFilters[key] = (f && f.type === 'daterange') ? { from: '', to: '' } : '';
         renderColumnFilterMenu();
         renderActiveColumnFilters();
         closeColumnFilterMenu();
         setTimeout(() => {
-            const el = document.getElementById('colFilterInput_' + key);
+            const el = document.getElementById('colFilterInput_' + key) || document.getElementById('colFilterInput_' + key + '_from');
             if (el) el.focus();
         }, 0);
     }
 }
-
 function removeColumnFilter(key) {
     delete columnFilters[key];
     renderColumnFilterMenu();
@@ -1787,6 +2011,14 @@ function clearAllColumnFilters() {
 
 function updateColumnFilterValue(key, value) {
     columnFilters[key] = value;
+    applyFilters();
+}
+
+function updateDateRangeFilterValue(key, part, value) {
+    if (!columnFilters[key] || typeof columnFilters[key] !== 'object') {
+        columnFilters[key] = { from: '', to: '' };
+    }
+    columnFilters[key][part] = value;
     applyFilters();
 }
 
@@ -1810,16 +2042,23 @@ function renderActiveColumnFilters() {
     row.style.display = 'flex';
     row.innerHTML = keys.map(key => {
         const f = fieldConfig(key);
-        const val = columnFilters[key] || '';
         let inputHtml = '';
         if (f.type === 'select') {
+            const val = columnFilters[key] || '';
             inputHtml = `<select id="colFilterInput_${key}" onchange="updateColumnFilterValue('${key}', this.value)">
                             <option value="">All</option>
                             ${f.options.map(o => `<option value="${o}" ${val === o ? 'selected' : ''}>${o}</option>`).join('')}
                          </select>`;
+        } else if (f.type === 'daterange') {
+            const range = (columnFilters[key] && typeof columnFilters[key] === 'object') ? columnFilters[key] : { from: '', to: '' };
+            inputHtml = `<input type="date" id="colFilterInput_${key}_from" value="${range.from || ''}" onchange="updateDateRangeFilterValue('${key}', 'from', this.value)">
+                         <span style="color:#8a9bad;font-size:12px;">to</span>
+                         <input type="date" id="colFilterInput_${key}_to" value="${range.to || ''}" onchange="updateDateRangeFilterValue('${key}', 'to', this.value)">`;
         } else if (f.type === 'date') {
+            const val = columnFilters[key] || '';
             inputHtml = `<input type="date" id="colFilterInput_${key}" value="${val}" oninput="updateColumnFilterValue('${key}', this.value)">`;
         } else {
+            const val = columnFilters[key] || '';
             inputHtml = `<input type="text" id="colFilterInput_${key}" placeholder="Search ${f.label.toLowerCase()}..." value="${val}" oninput="updateColumnFilterValue('${key}', this.value)">`;
         }
         return `<div class="column-filter-chip">
@@ -1832,9 +2071,21 @@ function renderActiveColumnFilters() {
 
 function matchesColumnFilters(row) {
     for (const key in columnFilters) {
+        const f = fieldConfig(key);
+        if (!f) continue;
+
+        if (f.type === 'daterange') {
+            const range = columnFilters[key];
+            if (!range || (!range.from && !range.to)) continue;
+            const rowVal = (row.getAttribute(f.dataAttr) || '').toString();
+            if (!rowVal) return false;
+            if (range.from && rowVal < range.from) return false;
+            if (range.to && rowVal > range.to) return false;
+            continue;
+        }
+
         const filterVal = (columnFilters[key] || '').toString().trim().toLowerCase();
         if (!filterVal) continue;
-        const f = fieldConfig(key);
         const rowVal = (row.getAttribute(f.dataAttr) || '').toString().toLowerCase();
 
         if (f.type === 'date') {
@@ -1861,10 +2112,9 @@ function applyFilters() {
 
         const text = row.textContent.toLowerCase();
         const allWordsFound = searchWords.length === 0 || searchWords.every(word => text.includes(word));
-        const dateRangeMatch = matchesDateRangeFilters(row);
         const columnMatch = matchesColumnFilters(row);
 
-        row.style.display = (allWordsFound && dateRangeMatch && columnMatch) ? '' : 'none';
+        row.style.display = (allWordsFound && columnMatch) ? '' : 'none';
     });
 
     checkNoResults();

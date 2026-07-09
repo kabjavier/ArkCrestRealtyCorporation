@@ -90,7 +90,7 @@ class DepartmentalExpensesController extends Controller
                 'category' => 'required|string',
                 'date_requested' => 'nullable|date',
                 'requested_amount' => 'nullable|numeric|min:0',
-                'status' => 'required|in:LIQUIDATED,NOT YET LIQUIDATED',
+                'status' => 'required|in:' . implode(',', \App\Models\DepartmentalExpense::STATUSES),
                 'date_released' => 'nullable|date',
                 'total_expenses' => 'nullable|numeric',
                 'amount_returned' => 'nullable|numeric',
@@ -213,7 +213,7 @@ class DepartmentalExpensesController extends Controller
                 'category' => 'required|string',
                 'date_requested' => 'nullable|date',
                 'requested_amount' => 'nullable|numeric|min:0',
-                'status' => 'required|in:LIQUIDATED,NOT YET LIQUIDATED',
+                'status' => 'required|in:' . implode(',', \App\Models\DepartmentalExpense::STATUSES),
                 'date_released' => 'nullable|date',
                 'total_expenses' => 'nullable|numeric',
                 'amount_returned' => 'nullable|numeric',
@@ -294,6 +294,36 @@ class DepartmentalExpensesController extends Controller
         }
         
         $DepartmentalExpense->update($validated);
+
+        // Keep the "view & print" Budget Request Form (reachable from this
+        // page via the Form button) in sync with the latest release /
+        // liquidation details entered here — e.g. via the "UPDATE RECORD"
+        // popup shown when Status is switched to LIQUIDATED. The view
+        // already falls back to these columns when the snapshot doesn't
+        // have its own value, but we sync explicitly too so a snapshot
+        // that already has stale values gets overwritten as well.
+        $snapshotKey = 'budget_form_snapshot_' . $DepartmentalExpense->id;
+        $rawSnapshot = \DB::table('app_settings')->where('key', $snapshotKey)->value('value');
+        if ($rawSnapshot !== null) {
+            $snapshot = json_decode($rawSnapshot, true);
+            if (!is_array($snapshot)) {
+                $snapshot = [];
+            }
+            $snapshot['actual_date_released'] = $DepartmentalExpense->date_released
+                ? $DepartmentalExpense->date_released->format('Y-m-d')
+                : null;
+            $snapshot['total_expenses'] = $DepartmentalExpense->total_expenses !== null
+                ? (string) $DepartmentalExpense->total_expenses
+                : '';
+            $snapshot['amount_returned'] = $DepartmentalExpense->amount_returned !== null
+                ? (string) $DepartmentalExpense->amount_returned
+                : '';
+            \DB::table('app_settings')->updateOrInsert(
+                ['key' => $snapshotKey],
+                ['value' => json_encode($snapshot), 'updated_at' => now()]
+            );
+        }
+
         ActivityLog::log('update', 'Departmental Expenses', "Updated expense ID: {$id} ({$validated['department']} - {$validated['category']})");
         return response()->json([
             'success' => true,
@@ -389,6 +419,24 @@ class DepartmentalExpensesController extends Controller
         return response()->json($categories);
     }
     
+    /**
+     * Show the original Budget Request / Liquidation Form for a single
+     * "All Expenses" record, exactly as it was filled in and submitted,
+     * so it can be viewed and printed again at any time.
+     */
+    public function viewForm($id)
+    {
+        $expense = DepartmentalExpense::withTrashed()->findOrFail($id);
+
+        $raw = \DB::table('app_settings')
+            ->where('key', 'budget_form_snapshot_' . $expense->id)
+            ->value('value');
+
+        $formData = $raw ? json_decode($raw, true) : [];
+
+        return view('budget-request-view', compact('expense', 'formData'));
+    }
+
     public function printLiquidation(Request $request)
     {
         $controlNumbers = $request->query('controls', '');
