@@ -586,8 +586,8 @@
     white-space: nowrap;
 }
 
-/* Sticky Control Number + Requestor Name columns in All Expenses table.
-   Column order is now: (1) checkbox, (2) Control Number, (3) Requestor Name */
+/* Sticky checkbox + Control Number + Requestor Name columns in All Expenses table.
+   Column order is: (1) checkbox, (2) Control Number, (3) Requestor Name */
 .table-wrapper {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -598,6 +598,8 @@
     min-width: 40px;
     text-align: center;
 }
+.requests-table th:nth-child(1),
+.requests-table td:nth-child(1),
 .requests-table th:nth-child(2),
 .requests-table td:nth-child(2),
 .requests-table th:nth-child(3),
@@ -605,13 +607,19 @@
     position: sticky;
     z-index: 2;
 }
+.requests-table td:nth-child(1),
 .requests-table td:nth-child(2),
 .requests-table td:nth-child(3) {
     background: #fff;
 }
+.requests-table th:nth-child(1),
 .requests-table th:nth-child(2),
 .requests-table th:nth-child(3) {
     z-index: 3;
+}
+.requests-table th:nth-child(1),
+.requests-table td:nth-child(1) {
+    left: 0;
 }
 .requests-table th:nth-child(2),
 .requests-table td:nth-child(2) {
