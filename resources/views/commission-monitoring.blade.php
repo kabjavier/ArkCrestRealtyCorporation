@@ -308,7 +308,13 @@
                 </thead>
                 <tbody id="monitoringTableBody">
                     @forelse($commissionRequests as $request)
-                    <tr id="cm-{{ $request->id }}" data-id="{{ $request->id }}"
+                    @php
+                        $isOverdue = $request->status !== 'Released' && $request->date_requested && $request->date_requested->diffInDays(now()) >= 7;
+                        $isRecent = $request->updated_at && $request->created_at && !$request->updated_at->eq($request->created_at) && $request->updated_at->diffInHours(now()) <= 48;
+                        $isHighValue = ($request->net_tcp ?? 0) >= 500000;
+                        $rowHlClasses = trim(($isOverdue ? 'cm-row-overdue ' : '') . ($isHighValue ? 'cm-row-highvalue ' : ''));
+                    @endphp
+                    <tr id="cm-{{ $request->id }}" class="{{ $rowHlClasses }}" data-id="{{ $request->id }}"
                         data-status="{{ $request->status }}"
                         data-date-requested="{{ $request->date_requested ? $request->date_requested->format('Y-m-d') : '' }}"
                         data-date-released="{{ $request->date_released ? $request->date_released->format('Y-m-d') : '' }}"
@@ -365,6 +371,13 @@
                                 @endif">
                                 {{ $request->status }}
                             </span>
+                            @if($isOverdue || $isRecent || $isHighValue)
+                            <div class="cm-highlight-badges">
+                                @if($isOverdue)<span class="cm-hl-badge cm-hl-overdue">⚠ Overdue</span>@endif
+                                @if($isRecent)<span class="cm-hl-badge cm-hl-recent">● Updated</span>@endif
+                                @if($isHighValue)<span class="cm-hl-badge cm-hl-highvalue">★ High Value</span>@endif
+                            </div>
+                            @endif
                         </td>
                         <td>
                             <div class="action-buttons">
@@ -1222,7 +1235,18 @@
         background: #dcfce7;
         color: #166534;
     }
-
+    /* ---- Record Highlights ---- */
+    .cm-row-overdue { background: rgba(239,68,68,.05); }
+    .cm-row-highvalue { background: rgba(163,121,41,.06); }
+    .cm-row-overdue td:first-child,
+    .cm-row-highvalue td:first-child { box-shadow: inset 4px 0 0 0 currentColor; }
+    .cm-row-overdue td:first-child { color: #ef4444; }
+    .cm-row-highvalue td:first-child { color: #A37929; }
+    .cm-highlight-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+    .cm-hl-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .3px; white-space: nowrap; }
+    .cm-hl-overdue { background: #fee2e2; color: #991b1b; }
+    .cm-hl-recent { background: #dbeafe; color: #1e40af; }
+    .cm-hl-highvalue { background: #fef3c7; color: #92400e; }
     /* Action Buttons */
     .action-buttons {
         display: flex;
