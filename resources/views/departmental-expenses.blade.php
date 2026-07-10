@@ -635,6 +635,16 @@
 }
 
 @media (max-width: 768px) {
+    .requests-table th:nth-child(1),
+    .requests-table td:nth-child(1),
+    .requests-table th:nth-child(2),
+    .requests-table td:nth-child(2),
+    .requests-table th:nth-child(3),
+    .requests-table td:nth-child(3) {
+        position: static;
+        box-shadow: none;
+        left: auto;
+    }
     .requests-table th:nth-child(2),
     .requests-table td:nth-child(2) {
         min-width: 110px !important;
@@ -645,10 +655,7 @@
     }
     .requests-table th:nth-child(3),
     .requests-table td:nth-child(3) {
-        position: static;
-        box-shadow: none;
         min-width: 140px !important;
-        left: auto;
     }
 }
 
