@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use ZipArchive;
 use Exception;
+use ZipArchive;
 
 class DatabaseBackupService
 {
@@ -78,7 +78,7 @@ class DatabaseBackupService
 
             $backups[] = [
                 'filename'   => $filename,
-                'type'       => str_ends_with(strtolower($filename), '.pdf') ? 'pdf' : 'zip',
+                'type'       => str_ends_with(strtolower($filename), '.pdf') ? 'pdf' : 'csv',
                 'size_bytes' => $disk->size($path),
                 'size_human' => $this->humanFileSize($disk->size($path)),
                 'created_at' => \Illuminate\Support\Carbon::createFromTimestamp($disk->lastModified($path)),
@@ -123,15 +123,21 @@ class DatabaseBackupService
     }
 
     /* ------------------------------------------------------------------ *
-     |  CSV backup, bundled in a ZIP (restorable)
+     |  CSV backup (restorable) — one CSV per table, zipped together.
+     |  Uses only PHP's built-in fputcsv/ZipArchive, no Composer package
+     |  required, so it works on every machine that can run PHP at all.
      * ------------------------------------------------------------------ */
 
     /**
-     * Export every backupable table into its own .csv file, bundled together
+     * Export every backupable table into its own .csv file, all bundled
      * into a single .zip archive. Returns the generated filename.
      */
     public function createCsvBackup(): string
     {
+        if (!class_exists(ZipArchive::class)) {
+            throw new Exception('The PHP "zip" extension is not enabled on this server. Please enable ext-zip in php.ini to create backups.');
+        }
+
         $tables = $this->backupableTables();
 
         $filename = 'backup_' . now()->format('Y-m-d_His') . '.zip';
@@ -143,30 +149,31 @@ class DatabaseBackupService
 
         $zip = new ZipArchive();
         if ($zip->open($fullPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new Exception('Could not create backup archive.');
+            throw new Exception('Could not create the backup zip file.');
         }
 
-        // ZipArchive::addFile only reads the source file when close() is called,
-        // so every temp file must stay on disk until after close().
-        $tmpFiles = [];
+        $tmpDir = sys_get_temp_dir() . '/arkcrest_backup_' . uniqid();
+        mkdir($tmpDir, 0777, true);
 
         try {
             foreach ($tables as $table) {
                 $columns = Schema::getColumnListing($table);
                 if (empty($columns)) continue;
 
-                $tmpFile = tempnam(sys_get_temp_dir(), 'csvexport_');
-                $tmpFiles[] = $tmpFile;
-
+                $tmpFile = $tmpDir . '/' . $table . '.csv';
                 $handle = fopen($tmpFile, 'w');
+
+                // Header row
                 fputcsv($handle, $columns);
 
+                // Data rows, chunked to keep memory usage sane
                 DB::table($table)->orderBy($columns[0])->chunk(self::CHUNK_SIZE, function ($rows) use ($handle, $columns) {
                     foreach ($rows as $row) {
                         $rowArray = (array) $row;
                         $line = [];
                         foreach ($columns as $colName) {
-                            $line[] = $rowArray[$colName] ?? '';
+                            $value = $rowArray[$colName] ?? null;
+                            $line[] = $value === null ? '' : (string) $value;
                         }
                         fputcsv($handle, $line);
                     }
@@ -176,16 +183,13 @@ class DatabaseBackupService
                 $zip->addFile($tmpFile, $table . '.csv');
             }
 
-            if ($zip->numFiles === 0) {
-                // Shouldn't happen, but keep the archive from being invalid/empty.
-                $zip->addFromString('empty.txt', 'No backupable tables were found.');
-            }
-
             $zip->close();
         } finally {
-            foreach ($tmpFiles as $f) {
-                if (is_file($f)) @unlink($f);
+            // Clean up temp CSVs regardless of success/failure
+            foreach (glob($tmpDir . '/*.csv') as $f) {
+                @unlink($f);
             }
+            @rmdir($tmpDir);
         }
 
         return $filename;
@@ -202,6 +206,17 @@ class DatabaseBackupService
      */
     public function createPdfBackup(): string
     {
+        // Rendering many tables/rows through Dompdf is memory-hungry (it builds
+        // a full layout tree per cell). Bump the limit just for this request
+        // as a safety net — this only affects this one PHP process, not the
+        // server-wide setting, and silently no-ops if the host disallows it.
+        ini_set('memory_limit', '512M');
+
+        // This export is for quick viewing/printing, not a full data dump
+        // (that's what the CSV backup is for) — capping rows per table keeps
+        // both the memory usage and the resulting PDF's size reasonable.
+        $rowLimit = 200;
+
         $tables = $this->backupableTables();
 
         $html = '<style>
@@ -224,7 +239,7 @@ class DatabaseBackupService
 
             $html .= '<h2>' . e($table) . '</h2>';
 
-            $rows = DB::table($table)->orderBy($columns[0])->limit(1000)->get();
+            $rows = DB::table($table)->orderBy($columns[0])->limit($rowLimit)->get();
 
             if ($rows->isEmpty()) {
                 $html .= '<div class="empty-note">No records.</div>';
@@ -248,8 +263,8 @@ class DatabaseBackupService
             }
             $html .= '</tbody></table>';
 
-            if (DB::table($table)->count() > 1000) {
-                $html .= '<div class="empty-note">Showing first 1000 rows only. Use the CSV backup for a complete export.</div>';
+            if (DB::table($table)->count() > $rowLimit) {
+                $html .= '<div class="empty-note">Showing first ' . $rowLimit . ' rows only. Use the CSV backup for a complete export.</div>';
             }
         }
 
@@ -276,10 +291,11 @@ class DatabaseBackupService
      * ------------------------------------------------------------------ */
 
     /**
-     * Restore the database from a previously created (or freshly uploaded) CSV/ZIP backup.
+     * Restore the database from a previously created (or freshly uploaded) CSV backup
+     * (a .zip archive containing one .csv file per table).
      *
-     * For every .csv file in the zip whose name (minus extension) matches a
-     * real, currently-existing table:
+     * For every .csv entry whose name (minus extension) matches a real,
+     * currently-existing table:
      *   - the table is truncated
      *   - rows from the CSV are re-inserted, matched by column header name
      *     against the table's CURRENT columns (columns in the file that no
@@ -292,15 +308,23 @@ class DatabaseBackupService
      *
      * @return array{restored: string[], skipped: string[]}
      */
-    public function restoreFromZip(string $absoluteZipPath): array
+    public function restoreFromCsv(string $absoluteZipPath): array
     {
+        if (!class_exists(ZipArchive::class)) {
+            throw new Exception('The PHP "zip" extension is not enabled on this server. Please enable ext-zip in php.ini to restore backups.');
+        }
+
         $zip = new ZipArchive();
         if ($zip->open($absoluteZipPath) !== true) {
-            throw new Exception('Could not open the backup archive. Make sure it is a valid .zip file created by this Backup & Restore feature.');
+            throw new Exception('Could not open the backup file — it may not be a valid .zip archive.');
         }
+
+        $tmpDir = sys_get_temp_dir() . '/arkcrest_restore_' . uniqid();
+        mkdir($tmpDir, 0777, true);
 
         $restored = [];
         $skipped = [];
+
         $driver = DB::connection()->getDriverName();
 
         DB::beginTransaction();
@@ -315,29 +339,25 @@ class DatabaseBackupService
                 $entryName = $zip->getNameIndex($i);
                 if (!str_ends_with(strtolower($entryName), '.csv')) continue;
 
-                $tableName = pathinfo($entryName, PATHINFO_FILENAME);
+                $tableName = basename($entryName, '.csv');
 
-                if (!Schema::hasTable($tableName) || in_array($tableName, self::EXCLUDED_TABLES, true)) {
+                if (!Schema::hasTable($tableName)) {
+                    $skipped[] = $tableName;
+                    continue;
+                }
+                if (in_array($tableName, self::EXCLUDED_TABLES, true)) {
                     $skipped[] = $tableName;
                     continue;
                 }
 
-                $content = $zip->getFromName($entryName);
-                if ($content === false) {
-                    $skipped[] = $tableName . ' (unreadable)';
-                    continue;
-                }
+                $extractedPath = $tmpDir . '/' . basename($entryName);
+                file_put_contents($extractedPath, $zip->getFromIndex($i));
 
-                // Write to a temp file and read with fgetcsv so quoted fields
-                // containing commas/newlines (e.g. remarks) are parsed correctly.
-                $tmpFile = tempnam(sys_get_temp_dir(), 'csvimport_');
-                file_put_contents($tmpFile, $content);
-                $handle = fopen($tmpFile, 'r');
+                $handle = fopen($extractedPath, 'r');
+                $fileColumns = fgetcsv($handle);
 
-                $header = fgetcsv($handle);
-                if ($header === false) {
+                if ($fileColumns === false || empty($fileColumns)) {
                     fclose($handle);
-                    @unlink($tmpFile);
                     $skipped[] = $tableName . ' (empty)';
                     continue;
                 }
@@ -347,11 +367,11 @@ class DatabaseBackupService
                 DB::table($tableName)->truncate();
 
                 $batch = [];
-                while (($values = fgetcsv($handle)) !== false) {
+                while (($row = fgetcsv($handle)) !== false) {
                     $record = [];
-                    foreach ($header as $idx => $colName) {
+                    foreach ($fileColumns as $idx => $colName) {
                         if ($colName === '' || !in_array($colName, $tableColumns, true)) continue;
-                        $value = $values[$idx] ?? null;
+                        $value = $row[$idx] ?? null;
                         $record[$colName] = ($value === null || $value === '') ? null : $value;
                     }
                     if (!empty($record)) {
@@ -368,8 +388,6 @@ class DatabaseBackupService
                 }
 
                 fclose($handle);
-                @unlink($tmpFile);
-
                 $restored[] = $tableName;
             }
 
@@ -385,6 +403,10 @@ class DatabaseBackupService
             throw $e;
         } finally {
             $zip->close();
+            foreach (glob($tmpDir . '/*.csv') as $f) {
+                @unlink($f);
+            }
+            @rmdir($tmpDir);
         }
 
         return ['restored' => $restored, 'skipped' => $skipped];
