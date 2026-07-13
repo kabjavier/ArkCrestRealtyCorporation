@@ -1412,6 +1412,15 @@
         grid-template-columns: 1fr 1fr;
         gap: 16px;
     }
+    .cm-field-error {
+        color: #dc2626;
+        font-size: 11px;
+        font-weight: 600;
+        margin-top: 4px;
+    }
+    .cm-field-invalid {
+        border-color: #dc2626 !important;
+    }
 
     .modal-field {
         display: flex;
@@ -2216,10 +2225,56 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.getElementById('cmEditForm').addEventListener('submit', function() {
+    document.getElementById('cmEditForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const form = this;
         const id = document.getElementById('cm_edit_id').value;
-        this.action = `/commission-monitoring/${id}`;
+
+        // Clear any previous inline errors before retrying
+        document.querySelectorAll('.cm-field-error').forEach(el => el.remove());
+        document.querySelectorAll('.cm-field-invalid').forEach(el => el.classList.remove('cm-field-invalid'));
+
         showToast('Saving changes...', 'info');
+
+        fetch(`/commission-monitoring/${id}`, {
+            method: 'POST', // Laravel reads @method('PUT') from the hidden field
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+            },
+            body: new FormData(form),
+        })
+        .then(async (r) => {
+            const data = await r.json().catch(() => null);
+            if (r.ok && data && data.success) {
+                showToast('Record updated successfully.', 'success');
+                closeCmModal('cmEditModal');
+                setTimeout(() => window.location.reload(), 600);
+                return;
+            }
+
+            // Validation error (422) — show inline messages near each affected field
+            if (r.status === 422 && data && data.errors) {
+                Object.keys(data.errors).forEach(field => {
+                    const input = form.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.classList.add('cm-field-invalid');
+                        const msg = document.createElement('div');
+                        msg.className = 'cm-field-error';
+                        msg.textContent = data.errors[field][0];
+                        input.closest('.modal-field')?.appendChild(msg);
+                    }
+                });
+                showToast(data.message || 'Please check the highlighted fields.', 'error', 'Validation Error');
+                return;
+            }
+
+            // Any other failure — friendly toast, never raw JSON
+            showToast((data && data.message) || 'Something went wrong. Please try again.', 'error');
+        })
+        .catch(() => {
+            showToast('Network error. Please check your connection and try again.', 'error');
+        });
     });
 
     // Auto-open edit/delete after admin approval redirect
@@ -2522,7 +2577,7 @@ function submitCmPermRequest() {
                     <div class="modal-field">
                         <label>Commission Terms</label>
                         <div class="select-wrapper">
-                            <select id="cm_edit_payment_type" name="payment_type" onchange="computeEditValueOfPaymentTerms()">
+                            <select id="cm_edit_payment_type" name="payment_type" onchange="computeEditValueOfPaymentTerms()" required>
                                 <option value="">— Select —</option>
                                 <option value="Full Payment">Full Payment</option>
                                 <option value="2 Months Commission">2 Months Commission</option>
