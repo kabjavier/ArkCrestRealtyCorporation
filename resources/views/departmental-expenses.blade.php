@@ -904,8 +904,8 @@
                         <input type="text" id="liq_amount_returned" class="form-control" placeholder="0.00" inputmode="decimal" readonly style="background-color: #f4f6f8;">
                     </div>
                     <div class="form-group">
-                        <label>Date of Amount Returned <span class="required" style="color:#ef4444;">*</span></label>
-                        <input type="date" id="liq_date_of_amount_returned" class="form-control" required>
+                        <label>Date of Amount Returned</label>
+                        <input type="date" id="liq_date_of_amount_returned" class="form-control">
                     </div>
                 </div>
             </div>
@@ -1498,11 +1498,6 @@ document.getElementById('liquidationUpdateForm').addEventListener('submit', func
         return;
     }
     if (!validateAmountField('liq_total_expenses', 'Total Expenses', true)) return;
-    if (!document.getElementById('liq_date_of_amount_returned').value) {
-        showToast('error', 'Date of Amount Returned Required', 'Please select a Date of Amount Returned before marking this record as liquidated.');
-        document.getElementById('liq_date_of_amount_returned').focus();
-        return;
-    }
 
     showConfirm('Are you sure you want to update this record?', function() {
         _submitLiquidationUpdate();
@@ -1981,11 +1976,6 @@ document.getElementById('budgetUpdateForm').addEventListener('submit', function(
             return;
         }
         if (!validateAmountField('edit_total_expenses', 'Total Expenses', true)) return;
-        if (!document.getElementById('edit_date_of_amount_returned').value) {
-            showToast('error', 'Date of Amount Returned Required', 'Please select a Date of Amount Returned before saving a liquidated record.');
-            document.getElementById('edit_date_of_amount_returned').focus();
-            return;
-        }
     } else {
         if (!validateAmountField('edit_total_expenses', 'Total Expenses', false)) return;
     }
