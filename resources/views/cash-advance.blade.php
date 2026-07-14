@@ -163,10 +163,10 @@
 .ca-stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #8A9BAD; margin-bottom: 8px; }
 .ca-stat-value { font-size: 24px; font-weight: 700; color: #1e2a3a; }
 
-.ca-grid { display: grid; grid-template-columns: 340px 1fr; gap: 20px; align-items: start; }
-@media (max-width: 900px) { .ca-grid { grid-template-columns: 1fr; } }
+.ca-grid { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .ca-grid { grid-template-columns: minmax(0, 1fr); } }
 
-.ca-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,.06); border: 1px solid #eef1f5; }
+.ca-card { background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,.06); border: 1px solid #eef1f5; min-width: 0; }
 .ca-card-title { font-size: 16px; font-weight: 700; color: #1e2a3a; margin: 0 0 4px; }
 .ca-card-sub { font-size: 12.5px; color: #8A9BAD; margin: 0 0 18px; }
 
@@ -192,7 +192,34 @@
 .ca-records-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px; }
 .ca-records-count { font-size: 12px; color: #8A9BAD; font-weight: 600; }
 
-.ca-table-wrap { overflow-x: auto; }
+/* The layout's global auto-scrollbar script tags this wrapper with .tbl-scroll,
+   which pulls in an extra overflow-y:auto + max-height rule from optimized-global.css
+   on top of the forced overflow-x:scroll rule from dashboard.css — the two competing
+   scroll axes end up painting two stacked scrollbar tracks. Pin everything down to a
+   single horizontal-only scrollbar here, at higher specificity than those global rules. */
+.ca-table-wrap,
+.ca-table-wrap.tbl-scroll,
+.ca-table-wrap.auto-scroll-wrap {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-height: none !important;
+    padding-bottom: 0 !important;
+}
+.ca-table-wrap::-webkit-scrollbar,
+.ca-table-wrap.tbl-scroll::-webkit-scrollbar {
+    height: 8px !important;
+    width: 0 !important;
+}
+.ca-table-wrap::-webkit-scrollbar-track,
+.ca-table-wrap.tbl-scroll::-webkit-scrollbar-track {
+    background: #f1f5f9 !important;
+    border-radius: 4px;
+}
+.ca-table-wrap::-webkit-scrollbar-thumb,
+.ca-table-wrap.tbl-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1 !important;
+    border-radius: 4px;
+}
 .ca-table { width: 100%; border-collapse: collapse; }
 .ca-table thead th {
     text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;

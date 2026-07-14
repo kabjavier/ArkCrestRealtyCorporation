@@ -739,6 +739,7 @@ private function getDeletedExpenses()
             'Note'                     => \App\Models\Note::class,
             'Permission Request'       => \App\Models\PermissionRequest::class,
             'Summary Report'           => \App\Models\SummaryReport::class,
+            'Cash Advance'             => \App\Models\CashAdvance::class,
         ];
 
         $class = $legacy[$meta['record_type'] ?? ''] ?? null;
