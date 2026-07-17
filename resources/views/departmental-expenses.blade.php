@@ -663,29 +663,23 @@
 .print-only { display: none; }
 
 @media print {
-    /* The dashboard shell (html/body and the .dashboard-container /
-       .content-wrapper / .main-content chain — see the reparenting
-       comment in layouts.dashboard.blade.php) is overflow:hidden with a
-       fixed height for the on-screen scrollable layout. That clips
-       print output no matter where in the DOM #printArea lives. These
-       overrides only apply during printing, so the screen layout is
-       untouched. */
-    html, body,
-    .dashboard-container,
-    .content-wrapper,
-    .main-content,
-    .page-content {
+    /* #printArea is reparented to be a direct child of <body> by
+       printSelectedRecords() right before printing. Hiding every OTHER
+       direct child of body (display:none, not visibility:hidden) removes
+       it from layout entirely, instead of just hiding it visually while
+       it still reserves its full height — that reserved height was what
+       produced several blank pages when only one row was selected. */
+    body > *:not(.print-only) {
+        display: none !important;
+    }
+    html, body {
         overflow: visible !important;
         height: auto !important;
         max-height: none !important;
     }
-    body * { visibility: hidden; }
-    .print-only, .print-only * { visibility: visible; }
     .print-only {
-        display: block;
-        position: absolute;
-        top: 0;
-        left: 0;
+        display: block !important;
+        position: static !important;
         width: 100%;
     }
     .print-header { margin-bottom: 20px; }

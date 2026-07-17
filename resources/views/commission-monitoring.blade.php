@@ -1571,29 +1571,24 @@
     /* Print Selected — same feature/fix as Departmental Expenses / Client Database */
     .cm-print-only{display:none}
     @media print{
-        /* The dashboard shell (html/body and the .dashboard-container /
-           .content-wrapper / .main-content / .page-content chain in
-           layouts.dashboard.blade.php) is overflow:hidden with a fixed
-           height for the on-screen scrollable layout, which clips print
-           output to a single viewport-sized box unless overridden. These
-           overrides only apply during printing; on-screen layout is
-           untouched. */
-        html, body,
-        .dashboard-container,
-        .content-wrapper,
-        .main-content,
-        .page-content{
+        /* #cmPrintArea is reparented to be a direct child of <body> by
+           cmPrintSelectedRecords() right before printing. Hiding every
+           OTHER direct child of body (display:none, not
+           visibility:hidden) removes it from layout entirely, instead of
+           just hiding it visually while it still reserves its full
+           height — that reserved height was what produced several blank
+           pages when only one row was selected. */
+        body > *:not(.cm-print-only){
+            display:none !important;
+        }
+        html, body{
             overflow:visible !important;
             height:auto !important;
             max-height:none !important;
         }
-        body *{visibility:hidden}
-        .cm-print-only,.cm-print-only *{visibility:visible}
         .cm-print-only{
-            display:block;
-            position:absolute;
-            top:0;
-            left:0;
+            display:block !important;
+            position:static !important;
             width:100%;
         }
         .cm-print-header{margin-bottom:20px}
