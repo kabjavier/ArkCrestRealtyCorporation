@@ -36,7 +36,7 @@ class CommissionStageService
         return 1;
     }
 
-    public function getTotalDownpayment(CommissionRequestSales $record): float
+   public function getTotalDownpayment(CommissionRequestSales $record): float
     {
         $label = strtoupper(trim((string) $record->terms_of_payment));
         $netTcp = max(0, (float) ($record->net_tcp ?? 0));
@@ -51,7 +51,6 @@ class CommissionStageService
 
         return round(max(0, (float) ($record->downpayment_amount ?? 0)), 2);
     }
-
     public function getPaidTotal(CommissionRequestSales $record, ?float $totalDownpayment = null): float
     {
         $totalDownpayment ??= $this->getTotalDownpayment($record);
