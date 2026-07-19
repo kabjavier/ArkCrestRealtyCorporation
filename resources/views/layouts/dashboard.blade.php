@@ -1278,6 +1278,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         pollNotifications();
     });
+    </script>
     @endif
 
     <style>
