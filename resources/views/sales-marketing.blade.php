@@ -176,7 +176,7 @@
             <div class="metric-content">
                 <div class="metric-label">Total Net TCP</div>
                 <div class="metric-value">₱{{ number_format($totalNetTcp, 2) }}</div>
-                <div class="metric-subtitle">{{ \Carbon\Carbon::parse($dateFrom)->format('M d') }} – {{ \Carbon\Carbon::parse($dateTo)->format('M d, Y') }}</div>
+                <div class="metric-subtitle">Year {{ \Carbon\Carbon::parse($dateFrom)->format('Y') }} &middot;</div>
             </div>
         </div>
         <div class="metric-card card-blue">
@@ -186,9 +186,9 @@
                 </svg>
             </div>
             <div class="metric-content">
-                <div class="metric-label">Total Records</div>
-                <div class="metric-value">{{ $totalRecords }}</div>
-                <div class="metric-subtitle">{{ \Carbon\Carbon::parse($dateFrom)->format('M d') }} – {{ \Carbon\Carbon::parse($dateTo)->format('M d, Y') }}</div>
+                <div class="metric-label">Total Units</div>
+                <div class="metric-value">{{ number_format($totalRecords, 0) }}</div>
+                <div class="metric-subtitle">Year {{ \Carbon\Carbon::parse($dateFrom)->format('Y') }} &middot;</div>
             </div>
         </div>
     </div>
@@ -567,7 +567,7 @@
                         <div style="display:flex;align-items:center;gap:10px">
                             <span style="width:24px;height:24px;background:#1e4575;color:white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">{{ $i+1 }}</span>
                             <span style="font-weight:600;color:#111827;font-size:14px">{{ $agent->agent_name }}</span>
-                            <span style="font-size:11px;color:#6b7280">{{ $agent->deals }} {{ $agent->deals == 1 ? 'deal' : 'deals' }}</span>
+                            <span style="font-size:11px;color:#6b7280">{{ $agent->units }} {{ $agent->units == 1 ? 'unit' : 'units' }}</span>
                             @if($agent->position)
                             <span style="font-size:10px;font-weight:700;background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:20px;">{{ $agent->position }}</span>
                             @endif
