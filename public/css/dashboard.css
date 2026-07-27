@@ -3729,3 +3729,211 @@ border: 2px solid #f1f1f1;
 .auto-scroll-wrap::-webkit-scrollbar-corner {
     background: #e2e8f0;
 }
+
+/* ============================================================
+   ARKCREST NAVIGATION PALETTE
+   Scope: dashboard navbar and sidebar only.
+   Existing page content, tables, forms, statuses, modals,
+   icons, records, and business logic are intentionally untouched.
+   ============================================================ */
+:root {
+    --ark-nav-950: #081827;
+    --ark-nav-900: #0d2238;
+    --ark-nav-850: #102a45;
+    --ark-nav-800: #163a5f;
+    --ark-gold: #d7aa42;
+    --ark-gold-soft: #f3d984;
+    --ark-nav-text: #f8fafc;
+    --ark-nav-muted: #aebdca;
+}
+
+.header {
+    background: var(--ark-nav-950) !important;
+    border-bottom: 1px solid rgba(215, 170, 66, 0.55) !important;
+    box-shadow: 0 5px 18px rgba(2, 12, 22, 0.22) !important;
+}
+
+.header-content,
+.header-left,
+.header-right,
+.company-name,
+.sidebar,
+.user-profile,
+.profile-name,
+.profile-email,
+.profile-role-badge,
+.nav-item,
+.nav-subitem,
+.logout-btn {
+    font-family: "Segoe UI", Arial, sans-serif !important;
+}
+
+.company-name {
+    color: var(--ark-nav-text) !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: currentColor !important;
+    background-clip: initial !important;
+    animation: none !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.4px !important;
+    text-shadow: none !important;
+}
+
+.logo {
+    filter: none !important;
+}
+
+.hdr-btn {
+    border: 1px solid transparent !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+}
+
+.hdr-btn:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    border-color: rgba(215, 170, 66, 0.24) !important;
+}
+
+.hdr-btn svg {
+    stroke: var(--ark-nav-muted) !important;
+}
+
+.hdr-btn:hover svg {
+    stroke: var(--ark-gold-soft) !important;
+}
+
+.hdr-badge-gold {
+    background: var(--ark-gold) !important;
+    color: var(--ark-nav-950) !important;
+}
+
+.sidebar {
+    background: linear-gradient(
+        180deg,
+        var(--ark-nav-900) 0%,
+        var(--ark-nav-850) 54%,
+        var(--ark-nav-950) 100%
+    ) !important;
+    border-right: 1px solid rgba(215, 170, 66, 0.22) !important;
+    box-shadow: 4px 0 18px rgba(2, 12, 22, 0.18) !important;
+}
+
+.user-profile {
+    background: rgba(255, 255, 255, 0.025) !important;
+    border-bottom: 1px solid rgba(215, 170, 66, 0.38) !important;
+}
+
+.profile-avatar {
+    border-color: var(--ark-gold) !important;
+    background: var(--ark-gold) !important;
+    box-shadow: none !important;
+}
+
+.profile-name {
+    color: var(--ark-nav-text) !important;
+    font-weight: 700 !important;
+}
+
+.profile-email,
+.profile-role {
+    color: var(--ark-nav-muted) !important;
+}
+
+.profile-role-badge {
+    background: rgba(215, 170, 66, 0.14) !important;
+    color: var(--ark-gold-soft) !important;
+    border-color: rgba(215, 170, 66, 0.42) !important;
+}
+
+.nav-menu::-webkit-scrollbar-thumb {
+    background: rgba(215, 170, 66, 0.38) !important;
+}
+
+.nav-item,
+.nav-subitem {
+    color: var(--ark-nav-muted) !important;
+    border: 1px solid transparent !important;
+}
+
+.nav-item:hover,
+.nav-subitem:hover {
+    color: var(--ark-nav-text) !important;
+    background: rgba(255, 255, 255, 0.055) !important;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+.nav-item.active,
+.nav-subitem.active {
+    color: var(--ark-nav-text) !important;
+    background: rgba(215, 170, 66, 0.14) !important;
+    border-color: rgba(215, 170, 66, 0.42) !important;
+    box-shadow: inset 3px 0 0 var(--ark-gold) !important;
+}
+
+.nav-item.active .nav-icon,
+.nav-subitem.active .nav-icon {
+    color: var(--ark-gold-soft) !important;
+}
+
+.nav-item::after {
+    background: var(--ark-gold) !important;
+}
+
+.nav-submenu-label {
+    color: rgba(243, 217, 132, 0.72) !important;
+}
+
+.logout-section {
+    background: rgba(2, 12, 22, 0.16) !important;
+    border-top-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.logout-btn {
+    color: var(--ark-nav-muted) !important;
+}
+
+.logout-btn:hover {
+    color: #ffffff !important;
+    background: rgba(239, 68, 68, 0.12) !important;
+}
+
+.sidebar-toggle {
+    background: var(--ark-nav-950) !important;
+    border: 1px solid var(--ark-gold) !important;
+    box-shadow: 0 2px 8px rgba(2, 12, 22, 0.24) !important;
+}
+
+.sidebar-toggle:hover {
+    background: var(--ark-gold) !important;
+}
+
+.sidebar-toggle:hover .toggle-icon {
+    color: var(--ark-nav-950) !important;
+}
+
+.mobile-menu-btn {
+    color: var(--ark-nav-text) !important;
+}
+
+@media (max-width: 1024px) {
+    .company-name {
+        font-size: 13px !important;
+        letter-spacing: 1px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .header {
+        background: var(--ark-nav-950) !important;
+    }
+
+    .company-name {
+        color: var(--ark-nav-text) !important;
+        background: none !important;
+        -webkit-text-fill-color: currentColor !important;
+        animation: none !important;
+    }
+}
+
